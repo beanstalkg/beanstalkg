@@ -1,6 +1,6 @@
 ## Implementation
 
-We can follow two main approached to support high availability and failover.
+We can follow two main approaches to support high availability and failover.
 
 - Dumb Proxy Approach - This is to support an existing beanstalk server scale to load and failover easily. Beanstalkg will act as a proxy to
 multiple beanstalkd servers allowing their state to be replicated. Master will be elected based on configuration.
