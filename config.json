@@ -1,0 +1,11 @@
+{
+  "local": {
+    "beanstalks": ["localhost"]
+  },
+  "test": {
+    "beanstalks": ["localhost"]
+  },
+  "production": {
+    "beanstalks": ["localhost"]
+  }
+}

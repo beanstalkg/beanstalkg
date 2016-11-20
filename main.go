@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"bufio"
 	"github.com/vimukthi-git/beanstalkg/server"
+	"encoding/json"
+	"log"
 )
 
 func main() {
@@ -66,4 +68,23 @@ func checkError(err error) {
 		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
 		os.Exit(1)
 	}
+}
+
+type Configuration struct {
+	Beanstalks []string `json:"beanstalks"`
+}
+
+func getConfig(env string) Configuration {
+	file, _ := os.Open("config.json")
+	decoder := json.NewDecoder(file)
+	configuration := make(map[string]Configuration)
+	err := decoder.Decode(&configuration)
+	if err != nil {
+		log.Fatal("error in parsing config:", err)
+	}
+	envConf, ok := configuration[env]
+	if !ok {
+		log.Fatal("No configuration found for the given environment name")
+	}
+	return envConf
 }
