@@ -3,7 +3,6 @@ package main
 import (
 	"net"
 	"os"
-	"fmt"
 	"github.com/vimukthi-git/beanstalkg/operation"
 	"encoding/json"
 	"log"
@@ -24,7 +23,7 @@ func main() {
 	checkError(err)
 
 	for {
-		fmt.Println("Waiting..")
+		log.Println("Waiting..")
 		conn, err := listener.Accept()
 		if err != nil {
 			continue
@@ -35,8 +34,7 @@ func main() {
 
 func checkError(err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
+		log.Fatal("Fatal error:", err.Error())
 	}
 }
 

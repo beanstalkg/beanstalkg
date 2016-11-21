@@ -30,7 +30,7 @@ func NewTubeHandler(name string, commands chan architecture.Command, stop chan b
 }
 
 func createTube(name string) *architecture.Tube {
-	return architecture.Tube{
+	return &architecture.Tube{
 		name,
 		&backend.MinHeap{},
 		&backend.MinHeap{},

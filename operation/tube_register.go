@@ -2,6 +2,7 @@ package operation
 
 import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
+	"log"
 )
 
 const DEFAULT_TUBE string = "default"
@@ -9,7 +10,7 @@ const DEFAULT_TUBE string = "default"
 func NewTubeRegister(commands chan architecture.Command, handlerConnections chan chan architecture.Command, stop chan bool) {
 	go func() {
 		tubeStopChannels := make(map[string]chan bool)
-		tubeChannels := make(map[string]chan chan architecture.Command)
+		tubeChannels := make(map[string]chan architecture.Command)
 		tubeChannels[DEFAULT_TUBE], tubeStopChannels[DEFAULT_TUBE] = createTubeHandler(DEFAULT_TUBE)
 		for {
 			select {
@@ -21,6 +22,7 @@ func NewTubeRegister(commands chan architecture.Command, handlerConnections chan
 							createTubeHandler(c.Params["tube"])
 					}
 					handlerConnections<-tubeChannels[c.Params["tube"]]
+					log.Println("TUBE_REGISTER sent tube: ", c.Params["tube"])
 				}
 			// TODO handle commands and send tubeChannels to clients if required
 			case <-stop:
