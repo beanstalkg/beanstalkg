@@ -1,6 +1,9 @@
 package architecture
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type State int
 
@@ -75,12 +78,14 @@ func (j *job) SetState(state State) error {
 	case DELAYED:
 		if j.state == RESERVED {
 			j.state = state
+			j.StartedDelayAt = time.Now().Unix()
 		} else {
 			return errors.New("Invalid state transition to RESERVED")
 		}
 	case RESERVED:
 		if j.state == READY {
 			j.state = state
+			j.StartedTTRAt = time.Now().Unix()
 		} else {
 			return errors.New("Invalid state transition to RESERVED")
 		}
@@ -100,11 +105,11 @@ func (j job) Key() int64 {
 	case READY:
 		return j.Pri
 	case DELAYED:
-		// TODO
-		return j.Pri
+		// time remaining from Delay till it gets ready becomes priority
+		return j.Delay - (time.Now().Unix() - j.StartedDelayAt)
 	case RESERVED:
-		// TODO
-		return j.Pri
+		// time remaining from TTR till it gets ready becomes the priority
+		return j.TTR - (time.Now().Unix() - j.StartedTTRAt)
 	}
 	return 0
 }
