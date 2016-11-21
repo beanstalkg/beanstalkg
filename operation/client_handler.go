@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"log"
 )
 
 func NewClientHandler(conn net.Conn, registerConnection chan architecture.Command,
@@ -15,28 +16,43 @@ func NewClientHandler(conn net.Conn, registerConnection chan architecture.Comman
 		scanner := bufio.NewScanner(conn)
 		fmt.Println("Scanning.. ")
 		// this command object will be replaced each time the client sends a new one
-		c := architecture.Command{}
-		// this map contains information regarding client connection
+		c := architecture.NewDefaultCommand()
+		var tubeConnection chan architecture.Command
 		// selects default tube first up
-		context := make(map[string]string)
-		context["tube"] = DEFAULT_TUBE
-		// scan continuously for client commands
-		for scanner.Scan() {
-			rawCommand := scanner.Text()
+		registerConnection <- c
+		tubeConnection <- tubeConnections
+
+		// convert scan to a selectable
+		scan := make(chan string)
+		go func() {
+			for scanner.Scan() {
+				scan <- scanner.Text()
+			}
+		}()
+
+		select {
+		case rawCommand := <- scan:
 			parsed, err := c.Parse(rawCommand)
 			if err != nil {
 				return
 			}
+			// check if the command has been parsed completely
 			if parsed {
-				registerConnection <- c
-				select {
-				case c2 := <-registerConnection:
-					// TODO
-				case con := <-tubeConnections:
-					// TODO write on received channel to interact with the tube
+				var err error
+				c, err = handleCommand(
+					c,
+					registerConnection,
+					tubeConnections,
+					&tubeConnection,
+				)
+				if err != nil {
+					log.Print(err)
+					return
 				}
-				_, err2 := conn.Write([]byte(ExecCommand(c, context) + "\r\n"))
+
+				_, err2 := conn.Write([]byte(c.Reply() + "\r\n"))
 				if err2 != nil {
+					log.Print(err2)
 					return
 				}
 				// fmt.Println(c)
@@ -48,9 +64,28 @@ func NewClientHandler(conn net.Conn, registerConnection chan architecture.Comman
 			//	return
 			//}
 			fmt.Println("Scanning.. ")
+		case <-stop:
+			return
 		}
 		if err := scanner.Err(); err != nil {
 			fmt.Fprintln(os.Stderr, "reading standard input:", err)
 		}
 	}()
+}
+
+func handleCommand(
+			command architecture.Command,
+			registerConnection chan architecture.Command,
+			tubeConnections chan chan architecture.Command,
+			tubeConnection *chan architecture.Command,
+		) (architecture.Command, error) {
+	switch command.Name {
+	case architecture.USE:
+		// send command to tube register
+		registerConnection <- command
+		tubeConnection <- tubeConnections
+	case architecture.PUT:
+
+	}
+	return command, nil
 }

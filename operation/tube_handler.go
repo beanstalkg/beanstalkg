@@ -16,15 +16,10 @@ func NewTubeHandler(name string, commands chan architecture.Command, stop chan b
 			case <-ticker.C:
 				tube.Delayed.Init()
 				// TODO house keeping - check if any delayed jobs are ready, reserved jobs are ready
-			case <-commands:
+			case c := <-commands:
 				switch c.Name {
 				case architecture.PUT:
-					val, ok := b.tubeCom[c.Params["tube"]];
-					if ok {
-						b.tubes[c.Params["tube"]] = createTube(c.Params["tube"])
-					} else {
 
-					}
 				}
 			case <-stop:
 				ticker.Stop()

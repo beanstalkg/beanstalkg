@@ -6,19 +6,31 @@ import (
 	// "fmt"
 )
 
-type CommandNames string
+type CommandName string
 
 const (
-	USE CommandNames = "use"
+	USE CommandName = "use"
 	PUT = "put"
 )
 
 type Command struct {
-	Name string
+	Name CommandName
 	RawCommand string
 	Params map[string]string
 	WaitingForMore bool
 	Err error
+}
+
+func NewDefaultCommand() Command {
+	return Command{
+		USE,
+		"use default",
+		map[string]string{
+			"tube": "default",
+		},
+		false,
+		nil,
+	}
 }
 
 func (c *Command) Parse(rawCommand string) (bool, error) {
@@ -32,7 +44,7 @@ func (c *Command) Parse(rawCommand string) (bool, error) {
 	} else {
 		parts := strings.Split(rawCommand, " ")
 		switch strings.ToLower(parts[0]) {
-		case USE:
+		case "use":
 			// fmt.Println(len(parts))
 			if len(parts) > 2 {
 				return true, errors.New("invalid format")
@@ -43,7 +55,7 @@ func (c *Command) Parse(rawCommand string) (bool, error) {
 				"tube": parts[1],
 			}
 			return true, nil
-		case PUT:
+		case "put":
 			// put <pri> <delay> <ttr> <bytes>\r\n <data>\r\n
 			if len(parts) != 5 {
 				return true, errors.New("invalid format")

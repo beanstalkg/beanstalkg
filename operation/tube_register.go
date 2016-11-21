@@ -6,7 +6,7 @@ import (
 
 const DEFAULT_TUBE string = "default"
 
-func NewTubeRegister(commands chan architecture.Command, stop chan bool) {
+func NewTubeRegister(commands chan architecture.Command, handlerConnections chan chan architecture.Command, stop chan bool) {
 	go func() {
 		tubeStopChannels := make(map[string]chan bool)
 		tubeChannels := make(map[string]chan chan architecture.Command)
@@ -16,11 +16,11 @@ func NewTubeRegister(commands chan architecture.Command, stop chan bool) {
 			case c := <-commands:
 				switch c.Name {
 				case architecture.USE:
-					if _, ok := b.tubes[c.Params["tube"]]; !ok {
-						b.tubes[c.Params["tube"]] = createTube(c.Params["tube"])
+					if _, ok := tubeChannels[c.Params["tube"]]; !ok {
+						tubeChannels[c.Params["tube"]], tubeStopChannels[c.Params["tube"]] =
+							createTubeHandler(c.Params["tube"])
 					}
-					context["tube"] = c.Params["tube"]
-					return c.Reply()
+					handlerConnections<-tubeChannels[c.Params["tube"]]
 				}
 			// TODO handle commands and send tubeChannels to clients if required
 			case <-stop:
@@ -31,8 +31,8 @@ func NewTubeRegister(commands chan architecture.Command, stop chan bool) {
 
 }
 
-func createTubeHandler(name string) chan chan architecture.Command {
-	tubeChannel := make(chan chan architecture.Command)
+func createTubeHandler(name string) (chan architecture.Command, chan bool) {
+	tubeChannel := make(chan architecture.Command)
 	stop := make(chan bool)
 	NewTubeHandler(name, tubeChannel, stop)
 	return tubeChannel, stop

@@ -7,12 +7,16 @@ import (
 	"github.com/vimukthi-git/beanstalkg/operation"
 	"encoding/json"
 	"log"
+	"github.com/vimukthi-git/beanstalkg/architecture"
 )
 
 func main() {
 	service := ":11300"
-	beanstalkg := operation.TubeRegister{}
-	beanstalkg.Init()
+	tubeRegister := make(chan architecture.Command)
+	// use this tube to send the channels for each individual tube to the clients when the do 'use' command
+	tubeHandlers := make(chan chan architecture.Command)
+	stop := make(chan bool)
+	operation.NewTubeRegister(tubeRegister, tubeHandlers, stop)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err)
 
@@ -25,7 +29,7 @@ func main() {
 		if err != nil {
 			continue
 		}
-		go beanstalkg.HandleClient(conn)
+		operation.NewClientHandler(conn, tubeRegister, tubeHandlers, stop)
 	}
 }
 
