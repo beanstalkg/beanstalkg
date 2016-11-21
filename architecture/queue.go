@@ -1,4 +1,4 @@
-package server
+package architecture
 
 type PriorityQueue interface {
 	Init()
@@ -6,6 +6,8 @@ type PriorityQueue interface {
 	Enqueue(item PriorityQueueItem)
 	// remove item from begining
 	Dequeue() (item PriorityQueueItem)
+	// find an item by id in the queue
+	Find(id string) (item PriorityQueueItem)
 }
 
 type PriorityQueueItem interface {
@@ -19,17 +21,4 @@ type Tube struct {
 	Reserved PriorityQueue
 	Delayed  PriorityQueue
 	Buried   []PriorityQueueItem
-}
-
-type Beanstalkg struct {
-	tubes map[string]Tube
-	tubeCom map[string]chan string
-}
-
-func (b *Beanstalkg) Init() {
-	// initialize the go routines to handle Heap ops and the comm channel
-}
-
-func (b *Beanstalkg) ExecCommand(c Command) string {
-	return "USING " + c.Params["tube"]
 }

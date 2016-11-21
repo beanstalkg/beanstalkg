@@ -1,4 +1,4 @@
-package server
+package architecture
 
 import (
 	"strings"
@@ -6,18 +6,38 @@ import (
 	// "fmt"
 )
 
+type CommandName string
+
+const (
+	USE CommandName = "use"
+	PUT = "put"
+)
+
 type Command struct {
-	Name string
+	Name CommandName
 	RawCommand string
 	Params map[string]string
 	WaitingForMore bool
+	Err error
+}
+
+func NewDefaultCommand() Command {
+	return Command{
+		USE,
+		"use default",
+		map[string]string{
+			"tube": "default",
+		},
+		false,
+		nil,
+	}
 }
 
 func (c *Command) Parse(rawCommand string) (bool, error) {
 	// check if this command has already been waiting for a second round
 	if c.WaitingForMore {
 		switch c.Name {
-		case "put":
+		case PUT:
 			c.Params["data"] = rawCommand
 			return true, nil
 		}
@@ -29,7 +49,7 @@ func (c *Command) Parse(rawCommand string) (bool, error) {
 			if len(parts) > 2 {
 				return true, errors.New("invalid format")
 			}
-			c.Name = "use"
+			c.Name = USE
 			c.RawCommand = rawCommand
 			c.Params = map[string]string{
 				"tube": parts[1],
@@ -40,7 +60,7 @@ func (c *Command) Parse(rawCommand string) (bool, error) {
 			if len(parts) != 5 {
 				return true, errors.New("invalid format")
 			}
-			c.Name = "put"
+			c.Name = PUT
 			c.RawCommand = rawCommand
 			c.Params = map[string]string{
 				"pri": parts[1],
@@ -53,4 +73,17 @@ func (c *Command) Parse(rawCommand string) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func (c *Command) Reply() string {
+	switch c.Name {
+	case USE:
+		if (c.Err == nil) {
+			return "USING " + c.Params["tube"]
+		}
+		return ""
+	case PUT:
+		return ""
+	}
+	return ""
 }

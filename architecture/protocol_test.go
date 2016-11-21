@@ -1,4 +1,4 @@
-package server
+package architecture
 
 import (
 	"testing"
