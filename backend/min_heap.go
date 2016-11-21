@@ -1,18 +1,16 @@
-package db
+package backend
 
 import (
 	"log"
 	"math"
+	"github.com/vimukthi-git/beanstalkg/architecture"
 	//"fmt"
 )
 
 /**
++++++ MIN HEAP BACKEND ++++++
 Dont want to use built in Heap for now. Easy to do optimizations
  */
-type HeapItem interface {
-	Key() int64
-	Id() string
-}
 
 type ownHeapItem struct {
 	key int64
@@ -28,9 +26,11 @@ func (t ownHeapItem) Id() string {
 }
 
 type MinHeap struct {
-	Store []HeapItem
+	Store []architecture.PriorityQueueItem
 	Size int
 }
+
+// +++++++++++++ START - PriorityQueue Interface methods +++++++++++++++++
 
 func (h *MinHeap) Init() {
 	//for i := 0; i < 100000; i++ {
@@ -38,11 +38,31 @@ func (h *MinHeap) Init() {
 	//}
 }
 
-func (h *MinHeap) Insert(item HeapItem) {
+func (h *MinHeap) Enqueue(item architecture.PriorityQueueItem) {
 	h.Size = h.Size + 1
 	h.Store = append(h.Store, ownHeapItem{math.MaxInt64, "-2"})
 	h.DecreaseKey(h.Size - 1, item)
 }
+
+func (h *MinHeap) Dequeue() architecture.PriorityQueueItem {
+	if h.Size > 0{
+		min := h.Min()
+		h.Delete(min.Id())
+		return min
+	}
+	return nil
+}
+
+func (h *MinHeap) Find(id string) architecture.PriorityQueueItem {
+	for i := 0; i < h.Size; i++ {
+		if h.Store[i].Id() == id {
+			return h.Store[i]
+		}
+	}
+	return nil
+}
+
+// +++++++++++++ END - PriorityQueue Interface methods +++++++++++++++++
 
 func (h *MinHeap) Delete(id string) {
 	for i := 0; i < h.Size; i++ {
@@ -55,16 +75,7 @@ func (h *MinHeap) Delete(id string) {
 	}
 }
 
-func (h *MinHeap) Find(id string) HeapItem {
-	for i := 0; i < h.Size; i++ {
-		if h.Store[i].Id() == id {
-			return h.Store[i]
-		}
-	}
-	return nil
-}
-
-func (h *MinHeap) DecreaseKey(i int, item HeapItem) {
+func (h *MinHeap) DecreaseKey(i int, item architecture.PriorityQueueItem) {
 	if item.Key() > h.Store[i].Key() {
 		log.Fatal("new key can not be larger than the current")
 	}
@@ -114,6 +125,6 @@ func (h *MinHeap) MinHeapify(i int) {
 	}
 }
 
-func (h *MinHeap) Min() HeapItem {
+func (h *MinHeap) Min() architecture.PriorityQueueItem {
 	return h.Store[0]
 }

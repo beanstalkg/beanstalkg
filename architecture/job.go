@@ -1,4 +1,4 @@
-package server
+package architecture
 
 import "errors"
 
@@ -25,9 +25,9 @@ type job struct {
 	state State
 }
 
-func NewJob(pri, delay, ttr, bytes int64, data string) *job {
+func NewJob(id string, pri, delay, ttr, bytes int64, data string) *job {
 	j := new(job)
-	j.id = "1" // TODO generate ids. Problem: what to do when multiple servers?
+	j.id = id
 	j.Pri = pri
 	j.Delay = delay
 	j.TTR = ttr
@@ -109,6 +109,6 @@ func (j job) Key() int64 {
 	return 0
 }
 
-func (j job) Id() int64 {
+func (j job) Id() string {
 	return j.id
 }
