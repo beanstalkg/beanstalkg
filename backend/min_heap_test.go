@@ -1,14 +1,14 @@
 package backend
 
 import (
-	"testing"
 	"fmt"
 	"github.com/vimukthi-git/beanstalkg/architecture"
+	"testing"
 )
 
 type testHeapItem struct {
 	key int64
-	id string
+	id  string
 }
 
 func (t testHeapItem) Key() int64 {
@@ -24,7 +24,7 @@ func (t testHeapItem) Id() string {
 INSERT 4
 INSERT 9
 DELETE 4
- */
+*/
 func TestMinHeap_Insert(t *testing.T) {
 	m := MinHeap{}
 	m.Enqueue(testHeapItem{4, string(1)})

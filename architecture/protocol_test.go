@@ -1,8 +1,8 @@
 package architecture
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestCommand_Parse(t *testing.T) {

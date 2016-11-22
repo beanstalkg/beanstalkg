@@ -1,8 +1,8 @@
 package architecture
 
 import (
-	"strings"
 	"errors"
+	"strings"
 	// "fmt"
 )
 
@@ -10,15 +10,15 @@ type CommandName string
 
 const (
 	USE CommandName = "use"
-	PUT = "put"
+	PUT             = "put"
 )
 
 type Command struct {
-	Name CommandName
-	RawCommand string
-	Params map[string]string
+	Name           CommandName
+	RawCommand     string
+	Params         map[string]string
 	WaitingForMore bool
-	Err error
+	Err            error
 }
 
 func NewDefaultCommand() Command {
@@ -63,9 +63,9 @@ func (c *Command) Parse(rawCommand string) (bool, error) {
 			c.Name = PUT
 			c.RawCommand = rawCommand
 			c.Params = map[string]string{
-				"pri": parts[1],
+				"pri":   parts[1],
 				"delay": parts[2],
-				"ttr": parts[3],
+				"ttr":   parts[3],
 				"bytes": parts[4],
 			}
 			c.WaitingForMore = true
@@ -78,7 +78,7 @@ func (c *Command) Parse(rawCommand string) (bool, error) {
 func (c *Command) Reply() string {
 	switch c.Name {
 	case USE:
-		if (c.Err == nil) {
+		if c.Err == nil {
 			return "USING " + c.Params["tube"]
 		}
 		return ""

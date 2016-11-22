@@ -1,12 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"github.com/vimukthi-git/beanstalkg/architecture"
+	"github.com/vimukthi-git/beanstalkg/operation"
+	"log"
 	"net"
 	"os"
-	"github.com/vimukthi-git/beanstalkg/operation"
-	"encoding/json"
-	"log"
-	"github.com/vimukthi-git/beanstalkg/architecture"
 )
 
 func main() {

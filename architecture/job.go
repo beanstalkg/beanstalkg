@@ -8,21 +8,21 @@ import (
 type State int
 
 const ( // iota is reset to 0
-	READY State = iota  // = 0
-	DELAYED  // = 1
-	RESERVED  // = 2
-	BURIED  // = 3
+	READY    State = iota // = 0
+	DELAYED               // = 1
+	RESERVED              // = 2
+	BURIED                // = 3
 )
 
 type job struct {
-	id string
-	Pri int64
-	Delay int64 // time set as delay in seconds
+	id             string
+	Pri            int64
+	Delay          int64 // time set as delay in seconds
 	StartedDelayAt int64 // timestamp of when it was set to delayed
-	StartedTTRAt int64 // timestamp of when it was reserved
-	TTR int64 // time set as ttr in seconds
-	Bytes int64
-	Data string
+	StartedTTRAt   int64 // timestamp of when it was reserved
+	TTR            int64 // time set as ttr in seconds
+	Bytes          int64
+	Data           string
 
 	// states
 	state State
@@ -66,7 +66,7 @@ func NewJob(id string, pri, delay, ttr, bytes int64, data string) *job {
                        |
                        |  delete
                         `--------> *poof*
- */
+*/
 func (j *job) SetState(state State) error {
 	switch state {
 	case READY:
