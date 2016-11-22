@@ -1,25 +1,28 @@
 package architecture
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type State int
 
 const ( // iota is reset to 0
-	READY State = iota  // = 0
-	DELAYED  // = 1
-	RESERVED  // = 2
-	BURIED  // = 3
+	READY    State = iota // = 0
+	DELAYED               // = 1
+	RESERVED              // = 2
+	BURIED                // = 3
 )
 
 type job struct {
-	id string
-	Pri int64
-	Delay int64 // time set as delay in seconds
+	id             string
+	Pri            int64
+	Delay          int64 // time set as delay in seconds
 	StartedDelayAt int64 // timestamp of when it was set to delayed
-	StartedTTRAt int64 // timestamp of when it was reserved
-	TTR int64 // time set as ttr in seconds
-	Bytes int64
-	Data string
+	StartedTTRAt   int64 // timestamp of when it was reserved
+	TTR            int64 // time set as ttr in seconds
+	Bytes          int64
+	Data           string
 
 	// states
 	state State
@@ -63,7 +66,7 @@ func NewJob(id string, pri, delay, ttr, bytes int64, data string) *job {
                        |
                        |  delete
                         `--------> *poof*
- */
+*/
 func (j *job) SetState(state State) error {
 	switch state {
 	case READY:
@@ -75,12 +78,14 @@ func (j *job) SetState(state State) error {
 	case DELAYED:
 		if j.state == RESERVED {
 			j.state = state
+			j.StartedDelayAt = time.Now().Unix()
 		} else {
 			return errors.New("Invalid state transition to RESERVED")
 		}
 	case RESERVED:
 		if j.state == READY {
 			j.state = state
+			j.StartedTTRAt = time.Now().Unix()
 		} else {
 			return errors.New("Invalid state transition to RESERVED")
 		}
@@ -100,11 +105,11 @@ func (j job) Key() int64 {
 	case READY:
 		return j.Pri
 	case DELAYED:
-		// TODO
-		return j.Pri
+		// time remaining from Delay till it gets ready becomes priority
+		return j.Delay - (time.Now().Unix() - j.StartedDelayAt)
 	case RESERVED:
-		// TODO
-		return j.Pri
+		// time remaining from TTR till it gets ready becomes the priority
+		return j.TTR - (time.Now().Unix() - j.StartedTTRAt)
 	}
 	return 0
 }

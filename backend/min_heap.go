@@ -1,20 +1,20 @@
 package backend
 
 import (
+	"github.com/vimukthi-git/beanstalkg/architecture"
 	"log"
 	"math"
-	"github.com/vimukthi-git/beanstalkg/architecture"
 	//"fmt"
 )
 
 /**
 +++++ MIN HEAP BACKEND ++++++
 Dont want to use built in Heap for now. Easy to do optimizations
- */
+*/
 
 type ownHeapItem struct {
 	key int64
-	id string
+	id  string
 }
 
 func (t ownHeapItem) Key() int64 {
@@ -27,7 +27,7 @@ func (t ownHeapItem) Id() string {
 
 type MinHeap struct {
 	Store []architecture.PriorityQueueItem
-	Size int
+	Size  int
 }
 
 // +++++++++++++ START - PriorityQueue Interface methods +++++++++++++++++
@@ -41,11 +41,11 @@ func (h *MinHeap) Init() {
 func (h *MinHeap) Enqueue(item architecture.PriorityQueueItem) {
 	h.Size = h.Size + 1
 	h.Store = append(h.Store, ownHeapItem{math.MaxInt64, "-2"})
-	h.DecreaseKey(h.Size - 1, item)
+	h.DecreaseKey(h.Size-1, item)
 }
 
 func (h *MinHeap) Dequeue() architecture.PriorityQueueItem {
-	if h.Size > 0{
+	if h.Size > 0 {
 		min := h.Min()
 		h.Delete(min.Id())
 		return min
@@ -81,7 +81,7 @@ func (h *MinHeap) DecreaseKey(i int, item architecture.PriorityQueueItem) {
 	}
 	h.Store[i] = item
 	//fmt.Println(h.Size, key)
-	for ;i > 0 && h.Store[h.Parent(i)].Key() > h.Store[i].Key(); {
+	for i > 0 && h.Store[h.Parent(i)].Key() > h.Store[i].Key() {
 		temp := h.Store[i]
 		h.Store[i] = h.Store[h.Parent(i)]
 		h.Store[h.Parent(i)] = temp
@@ -94,11 +94,11 @@ func (h *MinHeap) Parent(i int) int {
 }
 
 func (h *MinHeap) Left(i int) int {
-	return 2 * i + 1
+	return 2*i + 1
 }
 
 func (h *MinHeap) Right(i int) int {
-	return 2 * i + 2
+	return 2*i + 2
 }
 
 func (h *MinHeap) MinHeapify(i int) {
