@@ -11,6 +11,7 @@ func NewClientHandler(
 	conn net.Conn,
 	registerConnection chan architecture.Command,
 	tubeConnections chan chan architecture.Command,
+	jobConnections chan chan architecture.Job,
 	stop chan bool,
 ) {
 	go func() {
@@ -36,36 +37,26 @@ func NewClientHandler(
 			select {
 			case rawCommand := <-scan:
 				parsed, err := c.Parse(rawCommand)
-				if err != nil {
-					return
-				}
-				// check if the command has been parsed completely
-				if parsed {
-					var err error
-					c, err = handleCommand(
+				if err != nil { // check if parse error
+					err = handleReply(conn, c)
+					c = architecture.Command{}
+					if err != nil {
+						return
+					}
+				} else if parsed { // check if the command has been parsed completely
+					c = handleCommand(
 						c,
 						registerConnection,
 						tubeConnections,
 						&tubeConnection,
 					)
+					err = handleReply(conn, c)
 					if err != nil {
-						log.Print(err)
 						return
 					}
-
-					_, err2 := conn.Write([]byte(c.Reply() + "\r\n"))
-					if err2 != nil {
-						log.Print(err2)
-						return
-					}
-					// fmt.Println(c)
 					// we replace previous command once its parsing is finished
 					c = architecture.Command{}
 				}
-				//_, err2 := conn.Write([]byte(rawCommand + "\r\n"))
-				//if err2 != nil {
-				//	return
-				//}
 				log.Println("Scanning.. ")
 			case <-stop:
 				return
@@ -74,12 +65,21 @@ func NewClientHandler(
 	}()
 }
 
+func handleReply(conn net.Conn, c architecture.Command) error {
+	_, err := conn.Write([]byte(c.Reply() + "\r\n"))
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	return nil
+}
+
 func handleCommand(
 	command architecture.Command,
 	registerConnection chan architecture.Command,
 	tubeConnections chan chan architecture.Command,
 	tubeConnection *chan architecture.Command,
-) (architecture.Command, error) {
+) architecture.Command {
 	switch command.Name {
 	case architecture.USE:
 		// send command to tube register
@@ -88,7 +88,8 @@ func handleCommand(
 		tubeConnection = &tubeConnectionTemp
 		log.Println("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
-
+		*tubeConnection <- command // send the command to tube
+		command = <-*tubeConnection // get the response
 	}
-	return command, nil
+	return command
 }

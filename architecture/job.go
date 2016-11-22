@@ -3,6 +3,7 @@ package architecture
 import (
 	"errors"
 	"time"
+	"github.com/satori/go.uuid"
 )
 
 type State int
@@ -14,7 +15,7 @@ const ( // iota is reset to 0
 	BURIED                // = 3
 )
 
-type job struct {
+type Job struct {
 	id             string
 	Pri            int64
 	Delay          int64 // time set as delay in seconds
@@ -28,8 +29,8 @@ type job struct {
 	state State
 }
 
-func NewJob(id string, pri, delay, ttr, bytes int64, data string) *job {
-	j := new(job)
+func NewJob(id string, pri, delay, ttr, bytes int64, data string) *Job {
+	j := new(Job)
 	j.id = id
 	j.Pri = pri
 	j.Delay = delay
@@ -38,10 +39,10 @@ func NewJob(id string, pri, delay, ttr, bytes int64, data string) *job {
 	j.Data = data
 	if j.Delay <= 0 {
 		j.state = READY
-		// add to the delayed queue
+		// add to the ready queue
 	} else {
 		j.state = DELAYED
-		// add to the ready queue
+		// add to the delayed queue
 	}
 	return j
 }
@@ -67,7 +68,7 @@ func NewJob(id string, pri, delay, ttr, bytes int64, data string) *job {
                        |  delete
                         `--------> *poof*
 */
-func (j *job) SetState(state State) error {
+func (j *Job) SetState(state State) error {
 	switch state {
 	case READY:
 		if j.state == RESERVED || j.state == DELAYED || j.state == BURIED {
@@ -99,8 +100,12 @@ func (j *job) SetState(state State) error {
 	return nil
 }
 
+func (j *Job) State() State {
+	return j.state
+}
+
 // Return proper key according to the present job state
-func (j job) Key() int64 {
+func (j *Job) Key() int64 {
 	switch j.state {
 	case READY:
 		return j.Pri
@@ -114,6 +119,29 @@ func (j job) Key() int64 {
 	return 0
 }
 
-func (j job) Id() string {
+func (j *Job) Id() string {
 	return j.id
+}
+
+/**
+This struct is to store awaiting clients send channel for a tube
+ */
+type AwaitingClient struct {
+	id string
+	sendChannel chan Job
+}
+
+func NewAwaitingClient(sendChannel chan Job) *AwaitingClient {
+	a := new(AwaitingClient)
+	a.id = uuid.NewV1().String()
+	a.sendChannel = sendChannel
+	return a
+}
+
+func (w *AwaitingClient) Key() int64 {
+	return 0
+}
+
+func (w *AwaitingClient) Id() string {
+	return w.id
 }
