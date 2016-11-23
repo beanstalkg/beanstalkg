@@ -88,7 +88,7 @@ func handleCommand(
 		tubeConnection = &tubeConnectionTemp
 		log.Println("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
-		*tubeConnection <- command // send the command to tube
+		*tubeConnection <- command  // send the command to tube
 		command = <-*tubeConnection // get the response
 	}
 	return command
