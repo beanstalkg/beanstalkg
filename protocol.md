@@ -354,6 +354,34 @@ The reply is one of:
 
  - "NOT_IGNORED\r\n" if the client attempts to ignore the only tube in its
    watch list.
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
 
 Other Commands
 --------------
