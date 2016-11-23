@@ -20,7 +20,7 @@ func NewTubeHandler(
 		for {
 			select {
 			case <-ticker.C:
-				log.Println("House Keeping Started for: ", name)
+				// log.Println("House Keeping Started for: ", name)
 				tube.Process()
 			case c := <-commands:
 				switch c.Name {

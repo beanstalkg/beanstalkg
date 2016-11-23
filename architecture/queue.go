@@ -34,12 +34,14 @@ func (tube *Tube) Process() {
 	if delayedJob != nil && delayedJob.Key() <= 0 {
 		log.Println("delayed job got ready: ", delayedJob)
 		delayedJob = tube.Delayed.Dequeue()
+		delayedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(delayedJob)
 	}
 	// reserved jobs are put to ready
 	reservedJob := tube.Reserved.Peek()
 	if reservedJob != nil && reservedJob.Key() <= 0 {
 		reservedJob = tube.Reserved.Dequeue()
+		reservedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(reservedJob)
 	}
 	// ready jobs are sent
@@ -47,6 +49,7 @@ func (tube *Tube) Process() {
 	if (availableClientConnection != nil) {
 		readyJob := tube.Ready.Dequeue().(*Job)
 		availableClientConnection.(*AwaitingClient).SendChannel <- *readyJob
+		readyJob.SetState(RESERVED)
 		tube.Reserved.Enqueue(readyJob)
 	}
 }
