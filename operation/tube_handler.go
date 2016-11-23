@@ -26,10 +26,10 @@ func NewTubeHandler(
 				switch c.Name {
 				case architecture.PUT:
 					if c.Job.State() == architecture.READY {
-						log.Println("TUBE_HANDLER put job to ready queue: ", c)
+						log.Println("TUBE_HANDLER put job to ready queue: ", c, name)
 						tube.Ready.Enqueue(c.Job)
 					} else {
-						log.Println("TUBE_HANDLER put job to delayed queue: ", c)
+						log.Println("TUBE_HANDLER put job to delayed queue: ", c, name)
 						tube.Delayed.Enqueue(c.Job)
 					}
 					c.Err = nil

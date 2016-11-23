@@ -16,50 +16,16 @@ func NewClientHandler(
 ) {
 	go func() {
 		defer conn.Close()
-		// this command object will be replaced each time the client sends a new one
-		c := architecture.NewDefaultCommand()
-		var tubeConnection chan architecture.Command
-		// selects default tube first up
-		registerConnection <- c
-		tubeConnection = <-tubeConnections
 
-		// convert scan to a selectable
-		scan := make(chan string)
-		go func() {
-			scanner := bufio.NewScanner(conn)
-			for scanner.Scan() {
-				scan <- scanner.Text()
-			}
-		}()
-
-		for {
-			select {
-			case rawCommand := <-scan:
-				parsed, err := c.Parse(rawCommand)
-				if err != nil { // check if parse error
-					err = handleReply(conn, c)
-					c = architecture.Command{}
-					if err != nil {
-						return
-					}
-				} else if parsed { // check if the command has been parsed completely
-					c = handleCommand(
-						c,
-						registerConnection,
-						tubeConnections,
-						&tubeConnection,
-					)
-					err = handleReply(conn, c)
-					if err != nil {
-						return
-					}
-					// we replace previous command once its parsing is finished
-					c = architecture.Command{}
-				}
-			case <-stop:
-				return
-			}
+		client := clientHandler{
+			conn,
+			registerConnection,
+			tubeConnections,
+			nil,
+			jobConnections,
+			stop,
 		}
+		client.startSession()
 	}()
 }
 
@@ -72,22 +38,66 @@ func handleReply(conn net.Conn, c architecture.Command) error {
 	return nil
 }
 
-func handleCommand(
-	command architecture.Command,
-	registerConnection chan architecture.Command,
-	tubeConnections chan chan architecture.Command,
-	tubeConnection *chan architecture.Command,
-) architecture.Command {
+type clientHandler struct {
+	conn net.Conn
+	registerConnection chan architecture.Command
+	tubeConnections chan chan architecture.Command
+	currentTubeConnection chan architecture.Command
+	jobConnections chan chan architecture.Job
+	stop chan bool
+}
+
+func (client *clientHandler) startSession() {
+	// this command object will be replaced each time the client sends a new one
+	c := architecture.NewDefaultCommand()
+	// selects default tube first up
+	client.registerConnection <- c
+	client.currentTubeConnection = <-client.tubeConnections
+
+	// convert scan to a selectable
+	scan := make(chan string)
+	go func() {
+		scanner := bufio.NewScanner(client.conn)
+		for scanner.Scan() {
+			scan <- scanner.Text()
+		}
+	}()
+
+	for {
+		select {
+		case rawCommand := <-scan:
+			parsed, err := c.Parse(rawCommand)
+			if err != nil { // check if parse error
+				err = handleReply(client.conn, c)
+				c = architecture.Command{}
+				if err != nil {
+					return
+				}
+			} else if parsed { // check if the command has been parsed completely
+				c = client.handleCommand(c)
+				err = handleReply(client.conn, c)
+				if err != nil {
+					return
+				}
+				// we replace previous command once its parsing is finished
+				c = architecture.Command{}
+			}
+		case <-client.stop:
+			return
+		}
+	}
+}
+
+func (client *clientHandler) handleCommand(command architecture.Command) architecture.Command {
 	switch command.Name {
 	case architecture.USE:
 		// send command to tube register
-		registerConnection <- command
-		tubeConnectionTemp := <-tubeConnections
-		tubeConnection = &tubeConnectionTemp
+		client.registerConnection <- command
+		client.currentTubeConnection = <-client.tubeConnections
 		log.Println("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
-		*tubeConnection <- command  // send the command to tube
-		command = <-*tubeConnection // get the response
+		client.currentTubeConnection <- command  // send the command to tube
+		command = <-client.currentTubeConnection // get the response
 	}
 	return command
 }
