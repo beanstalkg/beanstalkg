@@ -44,6 +44,10 @@ func (h *MinHeap) Enqueue(item architecture.PriorityQueueItem) {
 	h.DecreaseKey(h.Size-1, item)
 }
 
+func (h *MinHeap) Peek() architecture.PriorityQueueItem {
+	return h.Min()
+}
+
 func (h *MinHeap) Dequeue() architecture.PriorityQueueItem {
 	if h.Size > 0 {
 		min := h.Min()
@@ -126,5 +130,10 @@ func (h *MinHeap) MinHeapify(i int) {
 }
 
 func (h *MinHeap) Min() architecture.PriorityQueueItem {
-	return h.Store[0]
+	if len(h.Store) > 0 {
+		return h.Store[0]
+	} else {
+		return nil
+	}
+
 }

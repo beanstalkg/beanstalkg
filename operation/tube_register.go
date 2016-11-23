@@ -31,6 +31,7 @@ func NewTubeRegister(
 				}
 			// TODO handle commands and send tubeChannels to clients if required
 			case <-stop:
+			// TODO send stop signal to all tube channels
 				return
 			}
 		}
