@@ -20,8 +20,8 @@ func NewTubeHandler(
 		for {
 			select {
 			case <-ticker.C:
-				tube.Delayed.Init()
-				// TODO house keeping - check if any delayed jobs are ready, reserved jobs are ready, ready jobs are sent
+				log.Println("House Keeping Started for: ", name)
+				tube.Process()
 			case c := <-commands:
 				switch c.Name {
 				case architecture.PUT:
@@ -46,6 +46,8 @@ func NewTubeHandler(
 	}()
 }
 
+// createTube ensures that we can change the implementation data structure of the priority queue easily
+// by changing only here
 func createTube(name string) *architecture.Tube {
 	t := &architecture.Tube{
 		name,

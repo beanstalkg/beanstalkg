@@ -16,8 +16,6 @@ func NewClientHandler(
 ) {
 	go func() {
 		defer conn.Close()
-		scanner := bufio.NewScanner(conn)
-		log.Println("Scanning.. ")
 		// this command object will be replaced each time the client sends a new one
 		c := architecture.NewDefaultCommand()
 		var tubeConnection chan architecture.Command
@@ -28,6 +26,7 @@ func NewClientHandler(
 		// convert scan to a selectable
 		scan := make(chan string)
 		go func() {
+			scanner := bufio.NewScanner(conn)
 			for scanner.Scan() {
 				scan <- scanner.Text()
 			}
@@ -57,7 +56,6 @@ func NewClientHandler(
 					// we replace previous command once its parsing is finished
 					c = architecture.Command{}
 				}
-				log.Println("Scanning.. ")
 			case <-stop:
 				return
 			}

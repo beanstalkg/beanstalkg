@@ -50,7 +50,7 @@ func TestMinHeap_Insert(t *testing.T) {
 }
 
 func TestIntegration(t *testing.T) {
-	tube := architecture.Tube{"test", &MinHeap{}, &MinHeap{}, &MinHeap{}, make([]architecture.PriorityQueueItem, 5)}
+	tube := architecture.Tube{"test", &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}}
 	//m.Enqueue(testHeapItem{4, string(1)})
 	fmt.Println(tube)
 	tube.Delayed.Enqueue(testHeapItem{4, string(1)})
