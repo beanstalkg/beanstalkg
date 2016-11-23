@@ -5,16 +5,16 @@ import (
 	"strings"
 	// "fmt"
 	"github.com/satori/go.uuid"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 type CommandName string
 
 const (
-	USE CommandName = "use"
-	PUT             = "put"
-	RESERVE         = "reserve"
+	USE     CommandName = "use"
+	PUT                 = "put"
+	RESERVE             = "reserve"
 )
 
 type Command struct {
@@ -23,7 +23,7 @@ type Command struct {
 	Params         map[string]string
 	WaitingForMore bool
 	Err            error
-	Job				*Job
+	Job            *Job
 }
 
 func NewDefaultCommand() Command {

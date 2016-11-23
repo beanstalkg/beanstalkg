@@ -16,10 +16,10 @@ type PriorityQueueItem interface {
 }
 
 type Tube struct {
-	Name     string
-	Ready    PriorityQueue
-	Reserved PriorityQueue
-	Delayed  PriorityQueue
-	Buried   PriorityQueue
+	Name            string
+	Ready           PriorityQueue
+	Reserved        PriorityQueue
+	Delayed         PriorityQueue
+	Buried          PriorityQueue
 	AwaitingClients PriorityQueue
 }

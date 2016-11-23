@@ -2,8 +2,8 @@ package architecture
 
 import (
 	"errors"
-	"time"
 	"github.com/satori/go.uuid"
+	"time"
 )
 
 type State int
@@ -123,11 +123,10 @@ func (j *Job) Id() string {
 	return j.id
 }
 
-/**
-This struct is to store awaiting clients send channel for a tube
- */
+
+// AwaitingClient stores an awaiting client send channel for a tube
 type AwaitingClient struct {
-	id string
+	id          string
 	sendChannel chan Job
 }
 

@@ -3,8 +3,8 @@ package operation
 import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"github.com/vimukthi-git/beanstalkg/backend"
-	"time"
 	"log"
+	"time"
 )
 
 func NewTubeHandler(
@@ -22,7 +22,7 @@ func NewTubeHandler(
 			case <-ticker.C:
 				tube.Delayed.Init()
 				// TODO house keeping - check if any delayed jobs are ready, reserved jobs are ready, ready jobs are sent
-			case c := <- commands:
+			case c := <-commands:
 				switch c.Name {
 				case architecture.PUT:
 					if c.Job.State() == architecture.READY {
