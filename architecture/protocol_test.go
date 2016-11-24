@@ -10,30 +10,36 @@ func TestCommand_Parse(t *testing.T) {
 	c.Parse("use test")
 	fmt.Println(c)
 	if c.RawCommand != "use test" {
-		t.Failed()
+		fmt.Println("First")
+		t.Fail()
 	}
 	if c.Name != "use" {
-		t.Failed()
+		fmt.Println("Second")
+		t.Fail()
 	}
 
 	c = Command{}
 	done, err := c.Parse("put 1 2 3 4")
 
 	if err != nil {
-		t.Failed()
+		fmt.Println("Third")
+		t.Fail()
 	}
 
 	if done {
-		t.Failed()
+		fmt.Println("Fourth")
+		t.Fail()
 	}
 
-	if c.Name != "put" || c.Params["ttr"] != "1" {
-		t.Failed()
+	if c.Name != "put" || c.Params["ttr"] != "3" {
+		fmt.Println("Fifth")
+		t.Fail()
 	}
 
 	c.Parse("data")
 
 	if c.Params["data"] != "data" {
-		t.Failed()
+		fmt.Println("Sixth")
+		t.Fail()
 	}
 }

@@ -30,20 +30,20 @@ func TestMinHeap_Insert(t *testing.T) {
 	m.Enqueue(testHeapItem{4, string(1)})
 	fmt.Println(m.Min().Key())
 	if m.Min().Key() != 4 {
-		t.Failed()
+		t.Fail()
 	}
 	m.Enqueue(testHeapItem{9, string(2)})
 	fmt.Println(m.Min())
 	if m.Min().Key() != 4 {
-		t.Failed()
+		t.Fail()
 	}
 	m.Delete(string(1))
 	if m.Size != 1 {
-		t.Failed()
+		t.Fail()
 	}
 	fmt.Println(m.Min().Key())
 	if m.Min().Key() != 9 {
-		t.Failed()
+		t.Fail()
 	}
 	// m.Delete(string(2))
 	fmt.Println(m.Dequeue().Id(), string(3))
@@ -55,6 +55,13 @@ func TestIntegration(t *testing.T) {
 	fmt.Println(tube)
 	tube.Delayed.Enqueue(testHeapItem{4, string(1)})
 	if tube.Delayed.Dequeue().Key() != 4 {
-		t.Failed()
+		t.Fail()
+	}
+	fmt.Println(tube.Delayed)
+	if tube.Delayed.Find(string(1)) != nil {
+		t.Fail()
+	}
+	if tube.Delayed.Dequeue() != nil {
+		t.Fail()
 	}
 }

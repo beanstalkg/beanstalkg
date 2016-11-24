@@ -5,46 +5,58 @@ import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"log"
 	"net"
+	"errors"
+	"strconv"
+	"reflect"
 )
+
+type clientHandler struct {
+	conn                           net.Conn
+	registerConnection             chan architecture.Command
+	tubeConnectionReceiver         chan chan architecture.Command
+	usedTubeConnection             chan architecture.Command
+	watchedTubeConnectionsReceiver chan chan architecture.Command
+	watchedTubeConnections         map[string]chan architecture.Command
+	reservedJobs					map[string]string
+	stop                           chan bool
+}
 
 func NewClientHandler(
 	conn net.Conn,
 	registerConnection chan architecture.Command,
-	tubeConnections chan chan architecture.Command,
-	jobConnections chan chan architecture.Job,
+	useTubeConnectionReceiver chan chan architecture.Command,
+	watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
 ) {
 	go func() {
 		defer conn.Close()
-
 		client := clientHandler{
 			conn,
 			registerConnection,
-			tubeConnections,
+			useTubeConnectionReceiver,
 			nil,
-			jobConnections,
+			watchedTubeConnectionsReceiver,
+			nil,
+			map[string]string{},
 			stop,
 		}
 		client.startSession()
 	}()
 }
 
-func handleReply(conn net.Conn, c architecture.Command) error {
-	_, err := conn.Write([]byte(c.Reply() + "\r\n"))
-	if err != nil {
-		log.Print(err)
-		return err
+func (client *clientHandler) handleReply(c architecture.Command) error {
+	for {
+		more, reply := c.Reply()
+		_, err := client.conn.Write([]byte(reply + "\r\n"))
+		if err != nil {
+			log.Print(err)
+			return err
+		}
+		if !more {
+			break
+		}
 	}
 	return nil
-}
-
-type clientHandler struct {
-	conn net.Conn
-	registerConnection chan architecture.Command
-	tubeConnections chan chan architecture.Command
-	currentTubeConnection chan architecture.Command
-	jobConnections chan chan architecture.Job
-	stop chan bool
 }
 
 func (client *clientHandler) startSession() {
@@ -52,8 +64,10 @@ func (client *clientHandler) startSession() {
 	c := architecture.NewDefaultCommand()
 	// selects default tube first up
 	client.registerConnection <- c
-	client.currentTubeConnection = <-client.tubeConnections
-
+	client.usedTubeConnection = <-client.tubeConnectionReceiver
+	client.watchedTubeConnections = map[string]chan architecture.Command{
+		"default": client.usedTubeConnection,
+	}
 	// convert scan to a selectable
 	scan := make(chan string)
 	go func() {
@@ -68,19 +82,19 @@ func (client *clientHandler) startSession() {
 		case rawCommand := <-scan:
 			parsed, err := c.Parse(rawCommand)
 			if err != nil { // check if parse error
-				err = handleReply(client.conn, c)
-				c = architecture.Command{}
+				err = client.handleReply(c)
+				c = architecture.NewCommand()
 				if err != nil {
 					return
 				}
 			} else if parsed { // check if the command has been parsed completely
-				c = client.handleCommand(c)
-				err = handleReply(client.conn, c)
+				c = client.handleBasicCommand(c)
+				err = client.handleReply(c)
 				if err != nil {
 					return
 				}
 				// we replace previous command once its parsing is finished
-				c = architecture.Command{}
+				c = architecture.NewCommand()
 			}
 		case <-client.stop:
 			return
@@ -88,16 +102,82 @@ func (client *clientHandler) startSession() {
 	}
 }
 
-func (client *clientHandler) handleCommand(command architecture.Command) architecture.Command {
+func (client *clientHandler) handleBasicCommand(command architecture.Command) architecture.Command {
 	switch command.Name {
 	case architecture.USE:
 		// send command to tube register
 		client.registerConnection <- command
-		client.currentTubeConnection = <-client.tubeConnections
+		client.usedTubeConnection = <- client.tubeConnectionReceiver
 		log.Println("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
-		client.currentTubeConnection <- command  // send the command to tube
-		command = <-client.currentTubeConnection // get the response
+		client.usedTubeConnection <- command  // send the command to tube
+		command = <-client.usedTubeConnection // get the response
+	case architecture.WATCH:
+		client.registerConnection <- command
+		client.watchedTubeConnections[command.Params["tube"]] = <- client.tubeConnectionReceiver
+		command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
+	case architecture.IGNORE:
+		if _, ok := client.watchedTubeConnections[command.Params["tube"]]; ok && len(client.watchedTubeConnections) > 1 {
+			delete(client.watchedTubeConnections, command.Params["tube"])
+			command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
+		} else {
+			command.Err = errors.New(architecture.NOT_IGNORED)
+		}
+	case architecture.RESERVE:
+		recv := make(chan architecture.Command)
+		go func() {
+			// iterate and create a list of watched connections to receive from
+			receiveConnections := []chan architecture.Command{}
+			receiveConnectionNames := []string{}
+			for name, connection := range client.watchedTubeConnections {
+				connection <- command
+				receiveConnections = append(receiveConnections, <-client.watchedTubeConnectionsReceiver)
+				receiveConnectionNames = append(receiveConnectionNames, name)
+			}
+			// receive from one of the channels
+			cases := make([]reflect.SelectCase, len(receiveConnections))
+			for i, ch := range receiveConnections {
+				cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
+			}
+			chosen, value, _ := reflect.Select(cases)
+			resultCommand := value.Interface().(architecture.Command)
+			resultCommand.Params["tube"] = receiveConnectionNames[chosen]
+			recv <- resultCommand
+			return
+		}()
+		command = <- recv
+		client.reservedJobs[command.Job.Id()] = command.Params["tube"]
+	case architecture.RESERVE_WITH_TIMEOUT:
+	case architecture.DELETE:
+		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
+			if con, ok := client.watchedTubeConnections[tube]; ok {
+				con <- command
+				command = <- con
+			}
+		} else {
+			command.Err = errors.New(architecture.NOT_FOUND)
+		}
+	case architecture.RELEASE:
+		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
+			if con, ok := client.watchedTubeConnections[tube]; ok {
+				con <- command
+				command = <- con
+			}
+		} else {
+			command.Err = errors.New(architecture.NOT_FOUND)
+		}
+	case architecture.BURY:
+		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
+			if con, ok := client.watchedTubeConnections[tube]; ok {
+				con <- command
+				command = <- con
+			}
+		} else {
+			command.Err = errors.New(architecture.NOT_FOUND)
+		}
+	case architecture.TOUCH:
+
 	}
+
 	return command
 }

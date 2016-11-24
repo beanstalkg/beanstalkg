@@ -1,6 +1,8 @@
 package architecture
 
-import "log"
+import (
+	"log"
+)
 
 type PriorityQueue interface {
 	Init()
@@ -12,6 +14,8 @@ type PriorityQueue interface {
 	Dequeue() (item PriorityQueueItem)
 	// find an item by id in the queue
 	Find(id string) (item PriorityQueueItem)
+	// delete an item and return it by id
+	Delete(id string) PriorityQueueItem
 }
 
 type PriorityQueueItem interface {
@@ -27,12 +31,13 @@ type Tube struct {
 	Buried          PriorityQueue
 	AwaitingClients PriorityQueue
 }
+
 // Process runs all the necessary operations for upkeep of the tube
 // TODO unit test
 func (tube *Tube) Process() {
 	delayedJob := tube.Delayed.Peek()
 	if delayedJob != nil && delayedJob.Key() <= 0 {
-		log.Println("delayed job got ready: ", delayedJob)
+		log.Println("QUEUE delayed job got ready: ", delayedJob)
 		delayedJob = tube.Delayed.Dequeue()
 		delayedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(delayedJob)
@@ -40,15 +45,19 @@ func (tube *Tube) Process() {
 	// reserved jobs are put to ready
 	reservedJob := tube.Reserved.Peek()
 	if reservedJob != nil && reservedJob.Key() <= 0 {
+		log.Println("QUEUE found reserved job thats ready: ", reservedJob)
 		reservedJob = tube.Reserved.Dequeue()
 		reservedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(reservedJob)
 	}
 	// ready jobs are sent
 	availableClientConnection := tube.AwaitingClients.Dequeue()
-	if (availableClientConnection != nil) {
+	if availableClientConnection != nil && tube.Ready.Peek() != nil {
 		readyJob := tube.Ready.Dequeue().(*Job)
-		availableClientConnection.(*AwaitingClient).SendChannel <- *readyJob
+		client := availableClientConnection.(*AwaitingClient)
+		log.Println("QUEUE sending job to client: ", client.id)
+		client.Request.Job = *readyJob
+		client.SendChannel <- client.Request
 		readyJob.SetState(RESERVED)
 		tube.Reserved.Enqueue(readyJob)
 	}

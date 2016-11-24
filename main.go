@@ -13,10 +13,10 @@ func main() {
 	service := ":11300"
 	tubeRegister := make(chan architecture.Command)
 	// use this tube to send the channels for each individual tube to the clients when the do 'use' command
-	tubeConnections := make(chan chan architecture.Command)
-	jobConnections := make(chan chan architecture.Job)
+	useTubeConnectionReceiver := make(chan chan architecture.Command)
+	watchedTubeConnectionsReceiver := make(chan chan architecture.Command)
 	stop := make(chan bool)
-	operation.NewTubeRegister(tubeRegister, tubeConnections, jobConnections, stop)
+	operation.NewTubeRegister(tubeRegister, useTubeConnectionReceiver, watchedTubeConnectionsReceiver, stop)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err)
 
@@ -29,7 +29,7 @@ func main() {
 		if err != nil {
 			continue
 		}
-		operation.NewClientHandler(conn, tubeRegister, tubeConnections, jobConnections, stop)
+		operation.NewClientHandler(conn, tubeRegister, useTubeConnectionReceiver, watchedTubeConnectionsReceiver, stop)
 	}
 }
 
