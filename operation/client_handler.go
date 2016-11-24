@@ -8,19 +8,20 @@ import (
 )
 
 type clientHandler struct {
-	conn net.Conn
-	registerConnection chan architecture.Command
-	tubeConnections chan chan architecture.Command
-	currentTubeConnection chan architecture.Command
-	jobConnections chan chan architecture.Job
-	stop chan bool
+	conn                           net.Conn
+	registerConnection             chan architecture.Command
+	useTubeConnectionReceiver      chan chan architecture.Command
+	usedTubeConnection             chan architecture.Command
+	watchedTubeConnectionsReceiver chan chan architecture.Command
+	watchedTubeConnections         []chan architecture.Command
+	stop                           chan bool
 }
 
 func NewClientHandler(
 	conn net.Conn,
 	registerConnection chan architecture.Command,
-	tubeConnections chan chan architecture.Command,
-	jobConnections chan chan architecture.Job,
+        useTubeConnectionReceiver chan chan architecture.Command,
+	watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
 ) {
 	go func() {
@@ -29,9 +30,10 @@ func NewClientHandler(
 		client := clientHandler{
 			conn,
 			registerConnection,
-			tubeConnections,
+			useTubeConnectionReceiver,
 			nil,
-			jobConnections,
+			watchedTubeConnectionsReceiver,
+			nil,
 			stop,
 		}
 		client.startSession()
@@ -52,7 +54,7 @@ func (client *clientHandler) startSession() {
 	c := architecture.NewDefaultCommand()
 	// selects default tube first up
 	client.registerConnection <- c
-	client.currentTubeConnection = <-client.tubeConnections
+	client.usedTubeConnection = <-client.useTubeConnectionReceiver
 
 	// convert scan to a selectable
 	scan := make(chan string)
@@ -93,11 +95,11 @@ func (client *clientHandler) handleCommand(command architecture.Command) archite
 	case architecture.USE:
 		// send command to tube register
 		client.registerConnection <- command
-		client.currentTubeConnection = <-client.tubeConnections
+		client.usedTubeConnection = <-client.useTubeConnectionReceiver
 		log.Println("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
-		client.currentTubeConnection <- command  // send the command to tube
-		command = <-client.currentTubeConnection // get the response
+		client.usedTubeConnection <- command  // send the command to tube
+		command = <-client.usedTubeConnection // get the response
 	}
 	return command
 }

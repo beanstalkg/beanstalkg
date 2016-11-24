@@ -10,7 +10,7 @@ import (
 func NewTubeHandler(
 	name string,
 	commands chan architecture.Command,
-	jobConnections chan chan architecture.Job,
+        watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
 ) {
 	// commands := make(chan architecture.Command)
@@ -27,10 +27,10 @@ func NewTubeHandler(
 				case architecture.PUT:
 					if c.Job.State() == architecture.READY {
 						log.Println("TUBE_HANDLER put job to ready queue: ", c, name)
-						tube.Ready.Enqueue(c.Job)
+						tube.Ready.Enqueue(&c.Job)
 					} else {
 						log.Println("TUBE_HANDLER put job to delayed queue: ", c, name)
-						tube.Delayed.Enqueue(c.Job)
+						tube.Delayed.Enqueue(&c.Job)
 					}
 					c.Err = nil
 					c.Params["id"] = c.Job.Id()

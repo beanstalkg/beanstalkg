@@ -127,12 +127,14 @@ func (j *Job) Id() string {
 // AwaitingClient stores an awaiting client send channel for a tube
 type AwaitingClient struct {
 	id          string
-	SendChannel chan Job
+	SendChannel chan Command
+	Request Command
 }
 
-func NewAwaitingClient(sendChannel chan Job) *AwaitingClient {
+func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClient {
 	a := new(AwaitingClient)
 	a.id = uuid.NewV1().String()
+	a.Request = request
 	a.SendChannel = sendChannel
 	return a
 }

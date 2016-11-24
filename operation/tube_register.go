@@ -9,14 +9,14 @@ const DEFAULT_TUBE string = "default"
 
 func NewTubeRegister(
 	commands chan architecture.Command,
-	tubeConnections chan chan architecture.Command,
-	jobConnections chan chan architecture.Job,
+        useTubeConnectionReceiver chan chan architecture.Command,
+        watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
 ) {
 	go func() {
 		tubeStopChannels := make(map[string]chan bool)
 		tubeChannels := make(map[string]chan architecture.Command)
-		tubeChannels[DEFAULT_TUBE], tubeStopChannels[DEFAULT_TUBE] = createTubeHandler(DEFAULT_TUBE, jobConnections)
+		tubeChannels[DEFAULT_TUBE], tubeStopChannels[DEFAULT_TUBE] = createTubeHandler(DEFAULT_TUBE, watchedTubeConnectionsReceiver)
 		for {
 			select {
 			case c := <-commands:
@@ -24,9 +24,9 @@ func NewTubeRegister(
 				case architecture.USE:
 					if _, ok := tubeChannels[c.Params["tube"]]; !ok {
 						tubeChannels[c.Params["tube"]], tubeStopChannels[c.Params["tube"]] =
-							createTubeHandler(c.Params["tube"], jobConnections)
+							createTubeHandler(c.Params["tube"], watchedTubeConnectionsReceiver)
 					}
-					tubeConnections <- tubeChannels[c.Params["tube"]]
+					useTubeConnectionReceiver <- tubeChannels[c.Params["tube"]]
 					log.Println("TUBE_REGISTER sent tube: ", c.Params["tube"])
 				}
 			// TODO handle commands and send tubeChannels to clients if required
@@ -41,13 +41,13 @@ func NewTubeRegister(
 
 func createTubeHandler(
 	name string,
-	jobConnections chan chan architecture.Job,
+	watchedTubeConnectionsReceiver chan chan architecture.Command,
 ) (
 	chan architecture.Command,
 	chan bool,
 ) {
 	tubeChannel := make(chan architecture.Command)
 	stop := make(chan bool)
-	NewTubeHandler(name, tubeChannel, jobConnections, stop)
+	NewTubeHandler(name, tubeChannel, watchedTubeConnectionsReceiver, stop)
 	return tubeChannel, stop
 }

@@ -48,7 +48,9 @@ func (tube *Tube) Process() {
 	availableClientConnection := tube.AwaitingClients.Dequeue()
 	if (availableClientConnection != nil) {
 		readyJob := tube.Ready.Dequeue().(*Job)
-		availableClientConnection.(*AwaitingClient).SendChannel <- *readyJob
+		client := availableClientConnection.(*AwaitingClient)
+		client.Request.Job = *readyJob
+		client.SendChannel <- client.Request
 		readyJob.SetState(RESERVED)
 		tube.Reserved.Enqueue(readyJob)
 	}

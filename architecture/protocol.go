@@ -23,41 +23,39 @@ type Command struct {
 	Params         map[string]string
 	WaitingForMore bool
 	Err            error
-	Job            *Job
+	Job            Job
 }
 
 func NewDefaultCommand() Command {
 	return Command{
-		USE,
-		"use default",
-		map[string]string{
+		Name: USE,
+		RawCommand: "use default",
+		Params: map[string]string{
 			"tube": "default",
 		},
-		false,
-		nil,
-		nil,
+		WaitingForMore: false,
 	}
 }
 
-func (command *Command) createJobFromParams() (*Job, error) {
+func (command *Command) createJobFromParams() (error) {
 	pri, e1 := strconv.ParseInt(command.Params["pri"], 10, 0)
 	if e1 != nil {
-		return nil, e1
+		return e1
 	}
 	delay, e2 := strconv.ParseInt(command.Params["delay"], 10, 0)
 	if e2 != nil {
-		return nil, e2
+		return e2
 	}
 	ttr, e3 := strconv.ParseInt(command.Params["ttr"], 10, 0)
 	if e3 != nil {
-		return nil, e3
+		return e3
 	}
 	bytes, e4 := strconv.ParseInt(command.Params["bytes"], 10, 0)
 	if e4 != nil {
-		return nil, e4
+		return e4
 	}
 
-	command.Job = NewJob(
+	command.Job = *NewJob(
 		uuid.NewV1().String(),
 		pri,
 		delay,
@@ -66,7 +64,7 @@ func (command *Command) createJobFromParams() (*Job, error) {
 		command.Params["data"],
 	)
 	log.Println("PROTOCOL new job: ", command.Job)
-	return command.Job, nil
+	return nil
 }
 
 // Parse keeps track of the state of the command and it will be called multiple times for commands such as  'put'
@@ -128,7 +126,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 		switch command.Name {
 		case PUT:
 			command.Params["data"] = rawCommand
-			_, err := command.createJobFromParams()
+			err := command.createJobFromParams()
 			// log.Println("GOT MORE PUT", c, err)
 			command.Err = err
 			return true, err
