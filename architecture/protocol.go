@@ -14,16 +14,16 @@ import (
 type CommandName string
 
 const (
-	USE     CommandName = "use"
-	PUT                 = "put"
-	WATCH                 = "watch"
-	IGNORE = "ignore"
-	RESERVE             = "reserve"
-	RESERVE_WITH_TIMEOUT = "reserve-with-timeout"
-	DELETE = "delete"
-	RELEASE = "release"
-	BURY = "bury"
-	TOUCH = "touch"
+	USE                  CommandName = "use"
+	PUT                              = "put"
+	WATCH                            = "watch"
+	IGNORE                           = "ignore"
+	RESERVE                          = "reserve"
+	RESERVE_WITH_TIMEOUT             = "reserve-with-timeout"
+	DELETE                           = "delete"
+	RELEASE                          = "release"
+	BURY                             = "bury"
+	TOUCH                            = "touch"
 )
 
 type Command struct {
@@ -37,7 +37,7 @@ type Command struct {
 
 func NewDefaultCommand() Command {
 	return Command{
-		Name: USE,
+		Name:       USE,
 		RawCommand: "use default",
 		Params: map[string]string{
 			"tube": "default",
@@ -46,7 +46,7 @@ func NewDefaultCommand() Command {
 	}
 }
 
-func (command *Command) createJobFromParams() (error) {
+func (command *Command) createJobFromParams() error {
 	pri, e1 := strconv.ParseInt(command.Params["pri"], 10, 0)
 	if e1 != nil {
 		return errors.New("BAD_FORMAT")
@@ -122,7 +122,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			}
 			command.RawCommand = rawCommand
 			command.Params = map[string]string{
-				"tube":   parts[1],
+				"tube": parts[1],
 			}
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
@@ -135,7 +135,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			}
 			command.RawCommand = rawCommand
 			command.Params = map[string]string{
-				"tube":   parts[1],
+				"tube": parts[1],
 			}
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
@@ -157,7 +157,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 				return true, command.Err
 			}
 			command.Params = map[string]string{
-				"timeout":   parts[1],
+				"timeout": parts[1],
 			}
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
@@ -170,7 +170,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 				return true, command.Err
 			}
 			command.Params = map[string]string{
-				"id":   parts[1],
+				"id": parts[1],
 			}
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
@@ -183,9 +183,9 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 				return true, command.Err
 			}
 			command.Params = map[string]string{
-				"id":   parts[1],
+				"id":    parts[1],
 				"pri":   parts[2],
-				"delay":   parts[3],
+				"delay": parts[3],
 			}
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
@@ -198,8 +198,8 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 				return true, command.Err
 			}
 			command.Params = map[string]string{
-				"id":   parts[1],
-				"pri":   parts[2],
+				"id":  parts[1],
+				"pri": parts[2],
 			}
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
@@ -212,7 +212,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 				return true, command.Err
 			}
 			command.Params = map[string]string{
-				"id":   parts[1],
+				"id": parts[1],
 			}
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
@@ -238,21 +238,21 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 
 func (command *Command) Reply() (bool, string) {
 
-	 	//- "BAD_FORMAT\r\n" The client sent a command line that was not well-formed.
-		//   This can happen if the line does not end with \r\n, if non-numeric
-		//   characters occur where an integer is expected, if the wrong number of
-		//   arguments are present, or if the command line is mal-formed in any other
-		//   way.
-		//
-		// - "UNKNOWN_COMMAND\r\n" The client sent a command that the server does not
-		//   know.
-		// TODO
-		// - "OUT_OF_MEMORY\r\n" The server cannot allocate enough memory for the job.
-		//   The client should try again later.
-		//
-		// - "INTERNAL_ERROR\r\n" This indicates a bug in the server. It should never
-		//   happen. If it does happen, please report it at
-		//   http://groups.google.com/group/beanstalk-talk.
+	//- "BAD_FORMAT\r\n" The client sent a command line that was not well-formed.
+	//   This can happen if the line does not end with \r\n, if non-numeric
+	//   characters occur where an integer is expected, if the wrong number of
+	//   arguments are present, or if the command line is mal-formed in any other
+	//   way.
+	//
+	// - "UNKNOWN_COMMAND\r\n" The client sent a command that the server does not
+	//   know.
+	// TODO
+	// - "OUT_OF_MEMORY\r\n" The server cannot allocate enough memory for the job.
+	//   The client should try again later.
+	//
+	// - "INTERNAL_ERROR\r\n" This indicates a bug in the server. It should never
+	//   happen. If it does happen, please report it at
+	//   http://groups.google.com/group/beanstalk-talk.
 	switch command.Name {
 	case USE:
 		if command.Err == nil {

@@ -10,7 +10,7 @@ import (
 func NewTubeHandler(
 	name string,
 	commands chan architecture.Command,
-        watchedTubeConnectionsReceiver chan chan architecture.Command,
+	watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
 ) {
 	// commands := make(chan architecture.Command)

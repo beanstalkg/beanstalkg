@@ -20,7 +20,7 @@ type clientHandler struct {
 func NewClientHandler(
 	conn net.Conn,
 	registerConnection chan architecture.Command,
-        useTubeConnectionReceiver chan chan architecture.Command,
+	useTubeConnectionReceiver chan chan architecture.Command,
 	watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
 ) {
@@ -106,7 +106,7 @@ func (client *clientHandler) handleCommand(command architecture.Command) archite
 	case architecture.PUT:
 		client.usedTubeConnection <- command  // send the command to tube
 		command = <-client.usedTubeConnection // get the response
-	// case ar
+		// case ar
 	}
 	return command
 }

@@ -9,8 +9,8 @@ const DEFAULT_TUBE string = "default"
 
 func NewTubeRegister(
 	commands chan architecture.Command,
-        useTubeConnectionReceiver chan chan architecture.Command,
-        watchedTubeConnectionsReceiver chan chan architecture.Command,
+	useTubeConnectionReceiver chan chan architecture.Command,
+	watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
 ) {
 	go func() {
@@ -31,7 +31,7 @@ func NewTubeRegister(
 				}
 			// TODO handle commands and send tubeChannels to clients if required
 			case <-stop:
-			// TODO send stop signal to all tube channels
+				// TODO send stop signal to all tube channels
 				return
 			}
 		}

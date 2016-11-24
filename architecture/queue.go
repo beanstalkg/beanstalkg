@@ -27,6 +27,7 @@ type Tube struct {
 	Buried          PriorityQueue
 	AwaitingClients PriorityQueue
 }
+
 // Process runs all the necessary operations for upkeep of the tube
 // TODO unit test
 func (tube *Tube) Process() {
@@ -46,7 +47,7 @@ func (tube *Tube) Process() {
 	}
 	// ready jobs are sent
 	availableClientConnection := tube.AwaitingClients.Dequeue()
-	if (availableClientConnection != nil) {
+	if availableClientConnection != nil {
 		readyJob := tube.Ready.Dequeue().(*Job)
 		client := availableClientConnection.(*AwaitingClient)
 		client.Request.Job = *readyJob
