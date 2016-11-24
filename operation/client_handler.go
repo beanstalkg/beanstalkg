@@ -41,10 +41,16 @@ func NewClientHandler(
 }
 
 func (client *clientHandler) handleReply(c architecture.Command) error {
-	_, err := client.conn.Write([]byte(c.Reply() + "\r\n"))
-	if err != nil {
-		log.Print(err)
-		return err
+	for {
+		more, reply := c.Reply()
+		_, err := client.conn.Write([]byte(reply + "\r\n"))
+		if err != nil {
+			log.Print(err)
+			return err
+		}
+		if !more {
+			break
+		}
 	}
 	return nil
 }
@@ -100,6 +106,7 @@ func (client *clientHandler) handleCommand(command architecture.Command) archite
 	case architecture.PUT:
 		client.usedTubeConnection <- command  // send the command to tube
 		command = <-client.usedTubeConnection // get the response
+	// case ar
 	}
 	return command
 }
