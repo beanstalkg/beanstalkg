@@ -66,18 +66,20 @@ func (h *MinHeap) Find(id string) architecture.PriorityQueueItem {
 	return nil
 }
 
-// +++++++++++++ END - PriorityQueue Interface methods +++++++++++++++++
-
-func (h *MinHeap) Delete(id string) {
+func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
 	for i := 0; i < h.Size; i++ {
 		if h.Store[i].Id() == id {
+			temp := h.Store[i]
 			h.Store[i] = ownHeapItem{math.MaxInt64, "-2"}
 			h.MinHeapify(i)
 			h.Size = h.Size - 1
-			break
+			return temp
 		}
 	}
+	return nil
 }
+
+// +++++++++++++ END - PriorityQueue Interface methods +++++++++++++++++
 
 func (h *MinHeap) DecreaseKey(i int, item architecture.PriorityQueueItem) {
 	if item.Key() > h.Store[i].Key() {
@@ -130,7 +132,7 @@ func (h *MinHeap) MinHeapify(i int) {
 }
 
 func (h *MinHeap) Min() architecture.PriorityQueueItem {
-	if len(h.Store) > 0 {
+	if h.Size > 0 {
 		return h.Store[0]
 	} else {
 		return nil

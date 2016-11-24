@@ -7,6 +7,7 @@ import (
 	"github.com/satori/go.uuid"
 	"log"
 	"strconv"
+	"fmt"
 )
 
 // TODO extract protocol error messages into a error helper
@@ -30,6 +31,7 @@ const (
 	BAD_FORMAT string = "BAD_FORMAT"
 	UNKNOWN_COMMAND = "UNKNOWN_COMMAND"
 	NOT_IGNORED = "NOT_IGNORED"
+	NOT_FOUND = "NOT_FOUND"
 )
 
 type Command struct {
@@ -37,8 +39,16 @@ type Command struct {
 	RawCommand     string
 	Params         map[string]string
 	WaitingForMore bool
+	MoreToSend     bool
 	Err            error
 	Job            Job
+}
+
+func NewCommand() Command {
+	return Command{
+		MoreToSend: false,
+		Params:map[string]string{},
+	}
 }
 
 func NewDefaultCommand() Command {
@@ -356,7 +366,12 @@ func (command *Command) Reply() (bool, string) {
 	//   sent to the server in the put command for this job.
 	case RESERVE:
 		if command.Err == nil {
-			return false, "INSERTED " + command.Job.Id()
+			if !command.MoreToSend {
+				command.MoreToSend = true
+				return true, fmt.Sprintf("RESERVED %s %d", command.Job.Id(), command.Job.Bytes)
+			} else {
+				return false, command.Job.Data
+			}
 		}
 	case RESERVE_WITH_TIMEOUT:
 		if command.Err == nil {
@@ -371,7 +386,7 @@ func (command *Command) Reply() (bool, string) {
 		// client, ready, or buried. This could happen if the job timed out before the
 		// client sent the delete command.
 		if command.Err == nil {
-			return false, "INSERTED " + command.Job.Id()
+			return false, "DELETED"
 		}
 	case RELEASE:
 		// The client expects one line of response, which may be:
@@ -383,7 +398,7 @@ func (command *Command) Reply() (bool, string) {
 		//
 		// - "NOT_FOUND\r\n" if the job does not exist or is not reserved by the client.
 		if command.Err == nil {
-			return false, "INSERTED " + command.Job.Id()
+			return false, "RELEASED"
 		}
 	case BURY:
 		// There are two possible responses:
@@ -392,7 +407,7 @@ func (command *Command) Reply() (bool, string) {
 		//
 		// - "NOT_FOUND\r\n" if the job does not exist or is not reserved by the client.
 		if command.Err == nil {
-			return false, "INSERTED " + command.Job.Id()
+			return false, "BURIED"
 		}
 	case TOUCH:
 		// There are two possible responses:

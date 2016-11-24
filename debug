@@ -1,0 +1,30 @@
+==================
+WARNING: DATA RACE
+Write by goroutine 9:
+  runtime.mapassign1()
+      /usr/local/Cellar/go/1.6.2/libexec/src/runtime/hashmap.go:429 +0x0
+  github.com/vimukthi-git/beanstalkg/operation.(*clientHandler).handleBasicCommand()
+      /Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/client_handler.go:118 +0xeab
+  github.com/vimukthi-git/beanstalkg/operation.(*clientHandler).startSession()
+      /Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/client_handler.go:91 +0x5f8
+  github.com/vimukthi-git/beanstalkg/operation.NewClientHandler.func1()
+      /Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/client_handler.go:43 +0x168
+
+Previous read by goroutine 6:
+  runtime.mapaccess1_faststr()
+      /usr/local/Cellar/go/1.6.2/libexec/src/runtime/hashmap_fast.go:193 +0x0
+  github.com/vimukthi-git/beanstalkg/operation.NewTubeRegister.func1()
+      /Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_register.go:37 +0xe84
+
+Goroutine 9 (running) created at:
+  github.com/vimukthi-git/beanstalkg/operation.NewClientHandler()
+      /Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/client_handler.go:44 +0x74
+  main.main()
+      /Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/main.go:32 +0x32e
+
+Goroutine 6 (running) created at:
+  github.com/vimukthi-git/beanstalkg/operation.NewTubeRegister()
+      /Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_register.go:45 +0x60
+  main.main()
+      /Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/main.go:19 +0xf7
+==================

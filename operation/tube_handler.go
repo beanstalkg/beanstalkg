@@ -5,6 +5,7 @@ import (
 	"github.com/vimukthi-git/beanstalkg/backend"
 	"log"
 	"time"
+	"github.com/syndtr/goleveldb/leveldb/errors"
 )
 
 func NewTubeHandler(
@@ -17,6 +18,7 @@ func NewTubeHandler(
 	go func() {
 		tube := createTube(name)
 		ticker := time.NewTicker(1 * time.Second)
+		// TODO make sure all logic that can be moved to Tube struct is moved there
 		for {
 			select {
 			case <-ticker.C:
@@ -39,6 +41,34 @@ func NewTubeHandler(
 					sendChan := make(chan architecture.Command)
 					tube.AwaitingClients.Enqueue(architecture.NewAwaitingClient(c, sendChan))
 					watchedTubeConnectionsReceiver <- sendChan
+				case architecture.DELETE:
+					if tube.Buried.Delete(c.Params["id"]) != nil || tube.Reserved.Delete(c.Params["id"]) != nil {
+						log.Println("TUBE_HANDLER deleted job: ", c, name)
+						c.Err = nil
+					} else {
+						c.Err = errors.New(architecture.NOT_FOUND)
+					}
+					commands <- c
+				case architecture.RELEASE:
+					job := tube.Reserved.Delete(c.Params["id"]).(*architecture.Job)
+					if job != nil {
+						log.Println("TUBE_HANDLER released job: ", c, name)
+						job.SetState(architecture.READY)
+						tube.Ready.Enqueue(job)
+					} else {
+						c.Err = errors.New(architecture.NOT_FOUND)
+					}
+					commands <- c
+				case architecture.BURY:
+					job := tube.Reserved.Delete(c.Params["id"]).(*architecture.Job)
+					if job != nil {
+						log.Println("TUBE_HANDLER buried job: ", c, name)
+						job.SetState(architecture.BURIED)
+						tube.Buried.Enqueue(job)
+					} else {
+						c.Err = errors.New(architecture.NOT_FOUND)
+					}
+					commands <- c
 				}
 			case <-stop:
 				ticker.Stop()
