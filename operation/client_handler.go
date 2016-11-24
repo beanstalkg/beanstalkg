@@ -5,6 +5,8 @@ import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"log"
 	"net"
+	"errors"
+	"strconv"
 )
 
 type clientHandler struct {
@@ -13,7 +15,7 @@ type clientHandler struct {
 	useTubeConnectionReceiver      chan chan architecture.Command
 	usedTubeConnection             chan architecture.Command
 	watchedTubeConnectionsReceiver chan chan architecture.Command
-	watchedTubeConnections         []chan architecture.Command
+	watchedTubeNames     map[string]bool
 	stop                           chan bool
 }
 
@@ -27,13 +29,16 @@ func NewClientHandler(
 	go func() {
 		defer conn.Close()
 
+		watchedTubeNames := map[string]bool{
+			"default": true,
+		}
 		client := clientHandler{
 			conn,
 			registerConnection,
 			useTubeConnectionReceiver,
 			nil,
 			watchedTubeConnectionsReceiver,
-			nil,
+			watchedTubeNames,
 			stop,
 		}
 		client.startSession()
@@ -106,7 +111,23 @@ func (client *clientHandler) handleCommand(command architecture.Command) archite
 	case architecture.PUT:
 		client.usedTubeConnection <- command  // send the command to tube
 		command = <-client.usedTubeConnection // get the response
-		// case ar
+	case architecture.WATCH:
+		client.watchedTubeNames[command.Params["tube"]] = true
+		command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeNames)), 10)
+	case architecture.IGNORE:
+		if _, ok := client.watchedTubeNames[command.Params["tube"]]; ok && len(client.watchedTubeNames) > 1 {
+			delete(client.watchedTubeNames, command.Params["tube"])
+			command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeNames)), 10)
+		} else {
+			command.Err = errors.New(architecture.NOT_IGNORED)
+		}
+	case architecture.RESERVE:
+	case architecture.RESERVE_WITH_TIMEOUT:
+	case architecture.RELEASE:
+	case architecture.BURY:
+	case architecture.TOUCH:
+
 	}
+
 	return command
 }

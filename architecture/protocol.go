@@ -26,6 +26,12 @@ const (
 	TOUCH                            = "touch"
 )
 
+const (
+	BAD_FORMAT string = "BAD_FORMAT"
+	UNKNOWN_COMMAND = "UNKNOWN_COMMAND"
+	NOT_IGNORED = "NOT_IGNORED"
+)
+
 type Command struct {
 	Name           CommandName
 	RawCommand     string
@@ -49,19 +55,19 @@ func NewDefaultCommand() Command {
 func (command *Command) createJobFromParams() error {
 	pri, e1 := strconv.ParseInt(command.Params["pri"], 10, 0)
 	if e1 != nil {
-		return errors.New("BAD_FORMAT")
+		return errors.New(BAD_FORMAT)
 	}
 	delay, e2 := strconv.ParseInt(command.Params["delay"], 10, 0)
 	if e2 != nil {
-		return errors.New("BAD_FORMAT")
+		return errors.New(BAD_FORMAT)
 	}
 	ttr, e3 := strconv.ParseInt(command.Params["ttr"], 10, 0)
 	if e3 != nil {
-		return errors.New("BAD_FORMAT")
+		return errors.New(BAD_FORMAT)
 	}
 	bytes, e4 := strconv.ParseInt(command.Params["bytes"], 10, 0)
 	if e4 != nil {
-		return errors.New("BAD_FORMAT")
+		return errors.New(BAD_FORMAT)
 	}
 
 	command.Job = *NewJob(
@@ -88,7 +94,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// use <tube>\r\n
 			command.Name = USE
 			if len(parts) > 2 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.RawCommand = rawCommand
@@ -101,7 +107,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// put <pri> <delay> <ttr> <bytes>\r\n <data>\r\n
 			command.Name = PUT
 			if len(parts) != 5 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.RawCommand = rawCommand
@@ -117,7 +123,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// watch <tube>\r\n
 			command.Name = WATCH
 			if len(parts) != 2 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.RawCommand = rawCommand
@@ -130,7 +136,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// ignore <tube>\r\n
 			command.Name = IGNORE
 			if len(parts) != 2 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.RawCommand = rawCommand
@@ -143,7 +149,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// reserve\r\n
 			command.Name = RESERVE
 			if len(parts) != 1 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.RawCommand = rawCommand
@@ -153,7 +159,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// reserve-with-timeout <seconds>\r\n
 			command.Name = RESERVE_WITH_TIMEOUT
 			if len(parts) != 2 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.Params = map[string]string{
@@ -166,7 +172,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// delete <id>\r\n
 			command.Name = DELETE
 			if len(parts) != 2 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.Params = map[string]string{
@@ -179,7 +185,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// release <id> <pri> <delay>\r\n
 			command.Name = RELEASE
 			if len(parts) != 4 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.Params = map[string]string{
@@ -194,7 +200,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// bury <id> <pri>\r\n
 			command.Name = BURY
 			if len(parts) != 3 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.Params = map[string]string{
@@ -208,7 +214,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			// touch <id>\r\n
 			command.Name = TOUCH
 			if len(parts) != 2 {
-				command.Err = errors.New("BAD_FORMAT")
+				command.Err = errors.New(BAD_FORMAT)
 				return true, command.Err
 			}
 			command.Params = map[string]string{
@@ -218,7 +224,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
 		default:
-			command.Err = errors.New("UNKNOWN_COMMAND")
+			command.Err = errors.New(UNKNOWN_COMMAND)
 			return true, command.Err
 		}
 	} else {
@@ -287,7 +293,7 @@ func (command *Command) Reply() (bool, string) {
 	case WATCH:
 		// WATCHING <count>\r\n
 		if command.Err == nil {
-			return false, "INSERTED " + command.Job.Id()
+			return false, "WATCHING " + command.Params["count"]
 		}
 	case IGNORE:
 		// - "WATCHING <count>\r\n" to indicate success.
@@ -297,7 +303,7 @@ func (command *Command) Reply() (bool, string) {
 		// - "NOT_IGNORED\r\n" if the client attempts to ignore the only tube in its
 		// watch list.
 		if command.Err == nil {
-			return false, "INSERTED " + command.Job.Id()
+			return false, "WATCHING " + command.Params["count"]
 		}
 
 	// RESERVE will return a newly-reserved job. If no job is available to be reserved,
