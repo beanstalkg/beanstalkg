@@ -7,15 +7,16 @@ import (
 	"net"
 	"errors"
 	"strconv"
+	"fmt"
 )
 
 type clientHandler struct {
 	conn                           net.Conn
 	registerConnection             chan architecture.Command
-	useTubeConnectionReceiver      chan chan architecture.Command
+	tubeConnectionReceiver         chan chan architecture.Command
 	usedTubeConnection             chan architecture.Command
 	watchedTubeConnectionsReceiver chan chan architecture.Command
-	watchedTubeNames     map[string]bool
+	watchedTubeConnections         map[string]chan architecture.Command
 	stop                           chan bool
 }
 
@@ -28,17 +29,13 @@ func NewClientHandler(
 ) {
 	go func() {
 		defer conn.Close()
-
-		watchedTubeNames := map[string]bool{
-			"default": true,
-		}
 		client := clientHandler{
 			conn,
 			registerConnection,
 			useTubeConnectionReceiver,
 			nil,
 			watchedTubeConnectionsReceiver,
-			watchedTubeNames,
+			nil,
 			stop,
 		}
 		client.startSession()
@@ -65,8 +62,10 @@ func (client *clientHandler) startSession() {
 	c := architecture.NewDefaultCommand()
 	// selects default tube first up
 	client.registerConnection <- c
-	client.usedTubeConnection = <-client.useTubeConnectionReceiver
-
+	client.usedTubeConnection = <-client.tubeConnectionReceiver
+	client.watchedTubeConnections = map[string]chan architecture.Command{
+		"default": client.usedTubeConnection,
+	}
 	// convert scan to a selectable
 	scan := make(chan string)
 	go func() {
@@ -106,22 +105,33 @@ func (client *clientHandler) handleCommand(command architecture.Command) archite
 	case architecture.USE:
 		// send command to tube register
 		client.registerConnection <- command
-		client.usedTubeConnection = <-client.useTubeConnectionReceiver
+		client.usedTubeConnection = <- client.tubeConnectionReceiver
 		log.Println("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
 		client.usedTubeConnection <- command  // send the command to tube
 		command = <-client.usedTubeConnection // get the response
 	case architecture.WATCH:
-		client.watchedTubeNames[command.Params["tube"]] = true
-		command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeNames)), 10)
+		client.registerConnection <- command
+		client.watchedTubeConnections[command.Params["tube"]] = <- client.tubeConnectionReceiver
+		command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
 	case architecture.IGNORE:
-		if _, ok := client.watchedTubeNames[command.Params["tube"]]; ok && len(client.watchedTubeNames) > 1 {
-			delete(client.watchedTubeNames, command.Params["tube"])
-			command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeNames)), 10)
+		if _, ok := client.watchedTubeConnections[command.Params["tube"]]; ok && len(client.watchedTubeConnections) > 1 {
+			delete(client.watchedTubeConnections, command.Params["tube"])
+			command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
 		} else {
 			command.Err = errors.New(architecture.NOT_IGNORED)
 		}
 	case architecture.RESERVE:
+		recv := make(chan architecture.Command)
+		go func() {
+			receiveConnections := []chan architecture.Command{}
+			for _, connection := range client.watchedTubeConnections {
+				connection <- command
+				append(receiveConnections, <-client.watchedTubeConnectionsReceiver)
+			}
+
+
+		}()
 	case architecture.RESERVE_WITH_TIMEOUT:
 	case architecture.RELEASE:
 	case architecture.BURY:

@@ -36,7 +36,9 @@ func NewTubeHandler(
 					c.Params["id"] = c.Job.Id()
 					commands <- c
 				case architecture.RESERVE:
-
+					sendChan := make(chan architecture.Command)
+					tube.AwaitingClients.Enqueue(architecture.NewAwaitingClient(c, sendChan))
+					watchedTubeConnectionsReceiver <- sendChan
 				}
 			case <-stop:
 				ticker.Stop()
