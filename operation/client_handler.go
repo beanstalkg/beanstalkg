@@ -7,6 +7,15 @@ import (
 	"net"
 )
 
+type clientHandler struct {
+	conn net.Conn
+	registerConnection chan architecture.Command
+	tubeConnections chan chan architecture.Command
+	currentTubeConnection chan architecture.Command
+	jobConnections chan chan architecture.Job
+	stop chan bool
+}
+
 func NewClientHandler(
 	conn net.Conn,
 	registerConnection chan architecture.Command,
@@ -29,22 +38,13 @@ func NewClientHandler(
 	}()
 }
 
-func handleReply(conn net.Conn, c architecture.Command) error {
-	_, err := conn.Write([]byte(c.Reply() + "\r\n"))
+func (client *clientHandler) handleReply(c architecture.Command) error {
+	_, err := client.conn.Write([]byte(c.Reply() + "\r\n"))
 	if err != nil {
 		log.Print(err)
 		return err
 	}
 	return nil
-}
-
-type clientHandler struct {
-	conn net.Conn
-	registerConnection chan architecture.Command
-	tubeConnections chan chan architecture.Command
-	currentTubeConnection chan architecture.Command
-	jobConnections chan chan architecture.Job
-	stop chan bool
 }
 
 func (client *clientHandler) startSession() {
@@ -68,14 +68,14 @@ func (client *clientHandler) startSession() {
 		case rawCommand := <-scan:
 			parsed, err := c.Parse(rawCommand)
 			if err != nil { // check if parse error
-				err = handleReply(client.conn, c)
+				err = client.handleReply(c)
 				c = architecture.Command{}
 				if err != nil {
 					return
 				}
 			} else if parsed { // check if the command has been parsed completely
 				c = client.handleCommand(c)
-				err = handleReply(client.conn, c)
+				err = client.handleReply(c)
 				if err != nil {
 					return
 				}
