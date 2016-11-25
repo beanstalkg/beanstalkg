@@ -63,7 +63,7 @@ func (client *clientHandler) startSession() {
 	// this command object will be replaced each time the client sends a new one
 	c := architecture.NewDefaultCommand()
 	// selects default tube first up
-	client.registerConnection <- c
+	client.registerConnection <- c.Copy()
 	client.usedTubeConnection = <-client.tubeConnectionReceiver
 	client.watchedTubeConnections = map[string]chan architecture.Command{
 		"default": client.usedTubeConnection,
@@ -106,14 +106,14 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 	switch command.Name {
 	case architecture.USE:
 		// send command to tube register
-		client.registerConnection <- command
+		client.registerConnection <- command.Copy()
 		client.usedTubeConnection = <- client.tubeConnectionReceiver
 		log.Println("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
-		client.usedTubeConnection <- command  // send the command to tube
+		client.usedTubeConnection <- command.Copy()  // send the command to tube
 		command = <-client.usedTubeConnection // get the response
 	case architecture.WATCH:
-		client.registerConnection <- command
+		client.registerConnection <- command.Copy()
 		client.watchedTubeConnections[command.Params["tube"]] = <- client.tubeConnectionReceiver
 		command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
 	case architecture.IGNORE:
@@ -130,7 +130,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 			receiveConnections := []chan architecture.Command{}
 			receiveConnectionNames := []string{}
 			for name, connection := range client.watchedTubeConnections {
-				connection <- command
+				connection <- command.Copy()
 				receiveConnections = append(receiveConnections, <-client.watchedTubeConnectionsReceiver)
 				receiveConnectionNames = append(receiveConnectionNames, name)
 			}
@@ -142,7 +142,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 			chosen, value, _ := reflect.Select(cases)
 			resultCommand := value.Interface().(architecture.Command)
 			resultCommand.Params["tube"] = receiveConnectionNames[chosen]
-			recv <- resultCommand
+			recv <- resultCommand.Copy()
 			return
 		}()
 		command = <- recv
@@ -151,7 +151,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 	case architecture.DELETE:
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
-				con <- command
+				con <- command.Copy()
 				command = <- con
 			}
 		} else {
@@ -169,7 +169,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 	case architecture.BURY:
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
-				con <- command
+				con <- command.Copy()
 				command = <- con
 			}
 		} else {

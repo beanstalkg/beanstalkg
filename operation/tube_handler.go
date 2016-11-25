@@ -5,7 +5,7 @@ import (
 	"github.com/vimukthi-git/beanstalkg/backend"
 	"log"
 	"time"
-	"github.com/syndtr/goleveldb/leveldb/errors"
+	"errors"
 )
 
 func NewTubeHandler(
@@ -36,7 +36,7 @@ func NewTubeHandler(
 					}
 					c.Err = nil
 					c.Params["id"] = c.Job.Id()
-					commands <- c
+					commands <- c.Copy()
 				case architecture.RESERVE:
 					sendChan := make(chan architecture.Command)
 					tube.AwaitingClients.Enqueue(architecture.NewAwaitingClient(c, sendChan))
@@ -48,7 +48,7 @@ func NewTubeHandler(
 					} else {
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
-					commands <- c
+					commands <- c.Copy()
 				case architecture.RELEASE:
 					job := tube.Reserved.Delete(c.Params["id"]).(*architecture.Job)
 					if job != nil {
@@ -58,7 +58,7 @@ func NewTubeHandler(
 					} else {
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
-					commands <- c
+					commands <- c.Copy()
 				case architecture.BURY:
 					job := tube.Reserved.Delete(c.Params["id"]).(*architecture.Job)
 					if job != nil {
@@ -68,7 +68,7 @@ func NewTubeHandler(
 					} else {
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
-					commands <- c
+					commands <- c.Copy()
 				}
 			case <-stop:
 				ticker.Stop()

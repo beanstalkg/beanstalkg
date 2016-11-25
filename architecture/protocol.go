@@ -62,6 +62,22 @@ func NewDefaultCommand() Command {
 	}
 }
 
+func (command *Command) Copy() Command {
+	paramsCopy := map[string]string{}
+	for k, v := range command.Params {
+		paramsCopy[k] = v
+	}
+	return Command{
+		Name           :command.Name,
+		RawCommand     :command.RawCommand,
+		Params         :paramsCopy,
+		WaitingForMore :command.WaitingForMore,
+		MoreToSend     :command.MoreToSend,
+		Err            :command.Err,
+		Job            :command.Job,
+	}
+}
+
 func (command *Command) createJobFromParams() error {
 	pri, e1 := strconv.ParseInt(command.Params["pri"], 10, 0)
 	if e1 != nil {
