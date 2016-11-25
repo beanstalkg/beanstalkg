@@ -3,11 +3,10 @@ package architecture
 import (
 	"errors"
 	"strings"
-	// "fmt"
+	"fmt"
 	"github.com/satori/go.uuid"
 	"log"
 	"strconv"
-	"fmt"
 )
 
 // TODO extract protocol error messages into a error helper
@@ -28,10 +27,10 @@ const (
 )
 
 const (
-	BAD_FORMAT string = "BAD_FORMAT"
-	UNKNOWN_COMMAND = "UNKNOWN_COMMAND"
-	NOT_IGNORED = "NOT_IGNORED"
-	NOT_FOUND = "NOT_FOUND"
+	BAD_FORMAT      string = "BAD_FORMAT"
+	UNKNOWN_COMMAND        = "UNKNOWN_COMMAND"
+	NOT_IGNORED            = "NOT_IGNORED"
+	NOT_FOUND              = "NOT_FOUND"
 )
 
 type Command struct {
@@ -47,7 +46,7 @@ type Command struct {
 func NewCommand() Command {
 	return Command{
 		MoreToSend: false,
-		Params:map[string]string{},
+		Params:     map[string]string{},
 	}
 }
 
@@ -68,13 +67,13 @@ func (command *Command) Copy() Command {
 		paramsCopy[k] = v
 	}
 	return Command{
-		Name           :command.Name,
-		RawCommand     :command.RawCommand,
-		Params         :paramsCopy,
-		WaitingForMore :command.WaitingForMore,
-		MoreToSend     :command.MoreToSend,
-		Err            :command.Err,
-		Job            :command.Job,
+		Name:           command.Name,
+		RawCommand:     command.RawCommand,
+		Params:         paramsCopy,
+		WaitingForMore: command.WaitingForMore,
+		MoreToSend:     command.MoreToSend,
+		Err:            command.Err,
+		Job:            command.Job,
 	}
 }
 

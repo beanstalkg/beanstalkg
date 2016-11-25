@@ -2,12 +2,12 @@ package operation
 
 import (
 	"bufio"
+	"errors"
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"log"
 	"net"
-	"errors"
-	"strconv"
 	"reflect"
+	"strconv"
 )
 
 type clientHandler struct {
@@ -17,7 +17,7 @@ type clientHandler struct {
 	usedTubeConnection             chan architecture.Command
 	watchedTubeConnectionsReceiver chan chan architecture.Command
 	watchedTubeConnections         map[string]chan architecture.Command
-	reservedJobs					map[string]string
+	reservedJobs                   map[string]string
 	stop                           chan bool
 }
 
@@ -107,14 +107,14 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 	case architecture.USE:
 		// send command to tube register
 		client.registerConnection <- command.Copy()
-		client.usedTubeConnection = <- client.tubeConnectionReceiver
+		client.usedTubeConnection = <-client.tubeConnectionReceiver
 		log.Println("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
-		client.usedTubeConnection <- command.Copy()  // send the command to tube
-		command = <-client.usedTubeConnection // get the response
+		client.usedTubeConnection <- command.Copy() // send the command to tube
+		command = <-client.usedTubeConnection       // get the response
 	case architecture.WATCH:
 		client.registerConnection <- command.Copy()
-		client.watchedTubeConnections[command.Params["tube"]] = <- client.tubeConnectionReceiver
+		client.watchedTubeConnections[command.Params["tube"]] = <-client.tubeConnectionReceiver
 		command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
 	case architecture.IGNORE:
 		if _, ok := client.watchedTubeConnections[command.Params["tube"]]; ok && len(client.watchedTubeConnections) > 1 {
@@ -145,14 +145,14 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 			recv <- resultCommand.Copy()
 			return
 		}()
-		command = <- recv
+		command = <-recv
 		client.reservedJobs[command.Job.Id()] = command.Params["tube"]
 	case architecture.RESERVE_WITH_TIMEOUT:
 	case architecture.DELETE:
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
 				con <- command.Copy()
-				command = <- con
+				command = <-con
 			}
 		} else {
 			command.Err = errors.New(architecture.NOT_FOUND)
@@ -161,7 +161,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
 				con <- command
-				command = <- con
+				command = <-con
 			}
 		} else {
 			command.Err = errors.New(architecture.NOT_FOUND)
@@ -170,7 +170,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
 				con <- command.Copy()
-				command = <- con
+				command = <-con
 			}
 		} else {
 			command.Err = errors.New(architecture.NOT_FOUND)
