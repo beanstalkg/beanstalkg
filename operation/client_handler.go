@@ -147,7 +147,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		}()
 		command = <-recv
 		client.reservedJobs[command.Job.Id()] = command.Params["tube"]
-	case architecture.RESERVE_WITH_TIMEOUT:
+	case architecture.RESERVE_WITH_TIMEOUT: // TODO add a new queue to each tube to track timeout client ids to handle this
 	case architecture.DELETE:
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {

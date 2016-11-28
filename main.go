@@ -7,10 +7,13 @@ import (
 	"log"
 	"net"
 	"os"
+	"flag"
 )
 
 func main() {
-	service := ":11300"
+	port := flag.String("p", "11300", "Port for beanstalkg server")
+	flag.Parse()
+	service := ":" + *port
 	tubeRegister := make(chan architecture.Command)
 	// use this tube to send the channels for each individual tube to the clients when the do 'use' command
 	useTubeConnectionReceiver := make(chan chan architecture.Command)
@@ -22,9 +25,10 @@ func main() {
 
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	checkError(err)
+	log.Println("BEANSTALKG listening on: ", *port)
 
 	for {
-		log.Println("Waiting..")
+		log.Println("BEANSTALKG Waiting..")
 		conn, err := listener.Accept()
 		if err != nil {
 			continue
