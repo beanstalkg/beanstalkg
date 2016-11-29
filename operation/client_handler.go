@@ -41,6 +41,8 @@ func NewClientHandler(
 			stop,
 		}
 		client.startSession()
+		log.Println("CLIENT_HANDLER exit")
+		return
 	}()
 }
 
@@ -70,11 +72,13 @@ func (client *clientHandler) startSession() {
 	}
 	// convert scan to a selectable
 	scan := make(chan string)
+	exit := make(chan bool)
 	go func() {
 		scanner := bufio.NewScanner(client.conn)
 		for scanner.Scan() {
 			scan <- scanner.Text()
 		}
+		exit<-true
 	}()
 
 	for {
@@ -97,6 +101,8 @@ func (client *clientHandler) startSession() {
 				c = architecture.NewCommand()
 			}
 		case <-client.stop:
+			return
+		case <- exit:
 			return
 		}
 	}

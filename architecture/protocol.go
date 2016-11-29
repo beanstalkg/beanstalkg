@@ -31,7 +31,11 @@ const (
 	UNKNOWN_COMMAND        = "UNKNOWN_COMMAND"
 	NOT_IGNORED            = "NOT_IGNORED"
 	NOT_FOUND              = "NOT_FOUND"
+	EXPECTED_CRLF		= "EXPECTED_CRLF"
+	JOB_TOO_BIG 		= "JOB_TOO_BIG"
 )
+
+const MAX_JOB_SIZE int64 = 65536 // 2^16
 
 type Command struct {
 	Name           CommandName
@@ -93,6 +97,12 @@ func (command *Command) createJobFromParams() error {
 	bytes, e4 := strconv.ParseInt(command.Params["bytes"], 10, 0)
 	if e4 != nil {
 		return errors.New(BAD_FORMAT)
+	}
+
+	if bytes > MAX_JOB_SIZE {
+		return errors.New(JOB_TOO_BIG)
+	} else if bytes != int64(len(command.Params["data"])) {
+		return errors.New(EXPECTED_CRLF)
 	}
 
 	command.Job = *NewJob(
@@ -257,7 +267,9 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 		// log.Println("GOT MORE", command)
 		switch command.Name {
 		case PUT:
+
 			command.Params["data"] = rawCommand
+			command.RawCommand += ("\r\n" + rawCommand)
 			err := command.createJobFromParams()
 			// log.Println("GOT MORE PUT", c, err)
 			command.Err = err

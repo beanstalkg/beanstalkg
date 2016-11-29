@@ -39,7 +39,7 @@ func main() {
 			operation.NewClientHandler(conn, tubeRegister, useTubeConnectionReceiver, watchedTubeConnectionsReceiver, stop)
 		}
 	} else {
-		config := getConfig(env)
+		config := getConfig(*env)
 		log.Println("BEANSTALKG started in proxy mode, now listening on: ", *port)
 		for {
 			// log.Println("BEANSTALKG Waiting..")
