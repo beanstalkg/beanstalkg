@@ -28,3 +28,5 @@ _testmain.go
 .idea
 *.iml
 
+**/node_modules
+

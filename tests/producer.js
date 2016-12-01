@@ -1,0 +1,28 @@
+var fivebeans = require('fivebeans');
+
+var client = new fivebeans.client('localhost', 11300);
+client
+    .on('connect', function()
+    {
+        console.log("connected");
+        client.use("test", function(err, tubename) {
+            if (err == null) {
+                //setInterval(function() {
+                    client.put(1, 0, 5, JSON.stringify({"number": 1}), function(err, jobid) {
+                        console.log("put job id", jobid);
+                    });
+                //}, 100);
+            }
+
+        });
+
+    })
+    .on('error', function(err)
+    {
+        // connection failure
+    })
+    .on('close', function()
+    {
+        // underlying connection has closed
+    })
+    .connect();

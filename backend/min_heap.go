@@ -4,7 +4,6 @@ import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"log"
 	"math"
-	//"fmt"
 )
 
 /**
@@ -41,7 +40,7 @@ func (h *MinHeap) Init() {
 func (h *MinHeap) Enqueue(item architecture.PriorityQueueItem) {
 	h.Size = h.Size + 1
 	h.Store = append(h.Store, ownHeapItem{math.MaxInt64, "-2"})
-	h.DecreaseKey(h.Size-1, item)
+	h.DecreaseKey(h.Size - 1, item)
 }
 
 func (h *MinHeap) Peek() architecture.PriorityQueueItem {
@@ -73,20 +72,30 @@ func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
 			h.Store[i] = ownHeapItem{math.MaxInt64, "-2"}
 			h.MinHeapify(i)
 			h.Size = h.Size - 1
+			// cleanup so that we don't waste memory
+			for j := len(h.Store) - 1; j > 0; j-- {
+				if (h.Store[j].Key() == math.MaxInt64 && j > h.Size) {
+					h.Store = h.Store[:len(h.Store)-1]
+				} else {
+					break
+				}
+			}
 			return temp
 		}
 	}
+
 	return nil
 }
 
 // +++++++++++++ END - PriorityQueue Interface methods +++++++++++++++++
 
 func (h *MinHeap) DecreaseKey(i int, item architecture.PriorityQueueItem) {
+	// log.Println("queue", h, i)
 	if item.Key() > h.Store[i].Key() {
 		log.Fatal("new key can not be larger than the current")
 	}
 	h.Store[i] = item
-	//fmt.Println(h.Size, key)
+	//log.Println(h.Size, key)
 	for i > 0 && h.Store[h.Parent(i)].Key() > h.Store[i].Key() {
 		temp := h.Store[i]
 		h.Store[i] = h.Store[h.Parent(i)]
@@ -108,21 +117,28 @@ func (h *MinHeap) Right(i int) int {
 }
 
 func (h *MinHeap) MinHeapify(i int) {
+	// log.Println("i=", i)
 	l := h.Left(i)
 	r := h.Right(i)
+	// log.Println("l=", l)
+	// log.Println("r=", r)
 	smallest := 0
-	if l < h.Size && h.Store[l].Key() < h.Store[i].Key() {
+	if l < len(h.Store) && h.Store[l].Key() < h.Store[i].Key() && h.Store[l].Key() != math.MaxInt64 {
+		//log.Println("l=", l)
+		//log.Println("h.Store[l]", h.Store[l])
 		smallest = l
 	} else {
 		smallest = i
 	}
-	//fmt.Println(r, h.Size)
-	//fmt.Println("l=", l)
-	//fmt.Println("i=", i)
-	//fmt.Println("smallest=", smallest)
-	if r < h.Size && h.Store[r].Key() < h.Store[smallest].Key() {
+	//log.Println(r, h.Size)
+	//log.Println("l=", l)
+	//log.Println("i=", i)
+	if r < len(h.Store) && h.Store[r].Key() < h.Store[smallest].Key() && h.Store[r].Key() != math.MaxInt64 {
+		//log.Println("r=", r)
+		//log.Println("h.Store[r]", h.Store[r])
 		smallest = r
 	}
+	// log.Println("smallest=", smallest)
 	if smallest != i {
 		temp := h.Store[i]
 		h.Store[i] = h.Store[smallest]

@@ -28,3 +28,39 @@ Goroutine 6 (running) created at:
   main.main()
       /Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/main.go:19 +0xf7
 ==================
+
+==================
+2016/12/01 11:52:19 QUEUE found reserved job thats ready:  &{21e90082-b777-11e6-907a-28f0763931b2 1 0 0 1480564338 1 7 payload 2}
+2016/12/01 11:52:19 *********************************************************************
+panic: interface conversion: architecture.PriorityQueueItem is backend.ownHeapItem, not *architecture.AwaitingClient
+
+goroutine 5 [running]:
+panic(0x1cfe60, 0xc4205f4340)
+	/usr/local/go/src/runtime/panic.go:500 +0x1ae
+github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420068300)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/architecture/queue.go:58 +0x365
+github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc42000c0f4, 0x4, 0xc4200da0c0, 0xc420068240, 0xc4200da120)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:26 +0x18e
+created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:78 +0x75
+exit status 2
+==================
+
+
+==================
+2016/12/01 18:10:52 TUBE_HANDLER deleted job:  {delete delete 6f53b3d1-b7ae-11e6-86d4-28f0763931b2 map[id:6f53b3d1-b7ae-11e6-86d4-28f0763931b2] false false <nil> { 0 0 0 0 0 0  0}} test
+2016/12/01 18:10:53 QUEUE sending job to client:  7086a63b-b7ae-11e6-86d4-28f0763931b2
+2016/12/01 18:10:53 CLIENT_HANDLER exit
+panic: interface conversion: architecture.PriorityQueueItem is backend.ownHeapItem, not *architecture.AwaitingClient
+
+goroutine 22 [running]:
+panic(0x1d0020, 0xc420286480)
+	/usr/local/go/src/runtime/panic.go:500 +0x1ae
+github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420072300)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/architecture/queue.go:58 +0x29f
+github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc4200d8006, 0x4, 0xc4200b6240, 0xc420072240, 0xc4200b62a0)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:26 +0x18e
+created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:78 +0x75
+exit status 2
+===================

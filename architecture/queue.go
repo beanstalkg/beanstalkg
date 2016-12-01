@@ -52,6 +52,7 @@ func (tube *Tube) Process() {
 	}
 	// ready jobs are sent
 	if tube.AwaitingClients.Peek() != nil && tube.Ready.Peek() != nil {
+		//log.Println("*********************************************************************")
 		availableClientConnection := tube.AwaitingClients.Dequeue()
 		readyJob := tube.Ready.Dequeue().(*Job)
 		client := availableClientConnection.(*AwaitingClient)

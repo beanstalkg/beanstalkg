@@ -5,7 +5,7 @@ import (
 	"strings"
 	"fmt"
 	"github.com/satori/go.uuid"
-	"log"
+	// "log"
 	"strconv"
 )
 
@@ -113,7 +113,7 @@ func (command *Command) createJobFromParams() error {
 		bytes,
 		command.Params["data"],
 	)
-	log.Println("PROTOCOL new job: ", command.Job)
+	// log.Println("PROTOCOL new job: ", command.Job)
 	return nil
 }
 
