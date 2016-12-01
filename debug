@@ -48,19 +48,112 @@ exit status 2
 
 
 ==================
-2016/12/01 18:10:52 TUBE_HANDLER deleted job:  {delete delete 6f53b3d1-b7ae-11e6-86d4-28f0763931b2 map[id:6f53b3d1-b7ae-11e6-86d4-28f0763931b2] false false <nil> { 0 0 0 0 0 0  0}} test
-2016/12/01 18:10:53 QUEUE sending job to client:  7086a63b-b7ae-11e6-86d4-28f0763931b2
-2016/12/01 18:10:53 CLIENT_HANDLER exit
+runtime/debug.Stack(0x155f8f, 0x86ee7, 0xc4200a40a0)
+	/usr/local/go/src/runtime/debug/stack.go:24 +0x87
+runtime/debug.PrintStack()
+	/usr/local/go/src/runtime/debug/stack.go:16 +0x34
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Min(0xc420096220, 0x2de020, 0x584007d6)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:155 +0x21f
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Peek(0xc420096220, 0x4, 0xc420156220)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:48 +0x39
+github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420070300)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/architecture/queue.go:54 +0x149
+github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc42000c0f4, 0x4, 0xc4200d80c0, 0xc420070240, 0xc4200d8120)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:26 +0x18e
+created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:78 +0x75
+2016/12/01 19:21:59 heap error - corrupted size &{[{9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2}] 3}
+goroutine 5 [running]:
+runtime/debug.Stack(0x155f8f, 0x86ee7, 0xc4200a40a0)
+	/usr/local/go/src/runtime/debug/stack.go:24 +0x87
+runtime/debug.PrintStack()
+	/usr/local/go/src/runtime/debug/stack.go:16 +0x34
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Min(0xc420096220, 0x2de020, 0x584007d7)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:155 +0x21f
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Peek(0xc420096220, 0x3, 0xc420156220)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:48 +0x39
+github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420070300)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/architecture/queue.go:54 +0x149
+github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc42000c0f4, 0x4, 0xc4200d80c0, 0xc420070240, 0xc4200d8120)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:26 +0x18e
+created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:78 +0x75
+2016/12/01 19:22:00 heap error - corrupted size &{[{9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2}] 3}
+goroutine 5 [running]:
+runtime/debug.Stack(0x155f8f, 0x86ee7, 0xc4200a40a0)
+	/usr/local/go/src/runtime/debug/stack.go:24 +0x87
+runtime/debug.PrintStack()
+	/usr/local/go/src/runtime/debug/stack.go:16 +0x34
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Min(0xc420096220, 0x2de020, 0x584007d8)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:155 +0x21f
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Peek(0xc420096220, 0x2, 0xc420156220)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:48 +0x39
+github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420070300)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/architecture/queue.go:54 +0x149
+github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc42000c0f4, 0x4, 0xc4200d80c0, 0xc420070240, 0xc4200d8120)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:26 +0x18e
+created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:78 +0x75
+2016/12/01 19:22:01 heap error - corrupted size &{[{9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2}] 3}
+goroutine 5 [running]:
+runtime/debug.Stack(0x155f8f, 0x86ee7, 0xc4200a40a0)
+	/usr/local/go/src/runtime/debug/stack.go:24 +0x87
+runtime/debug.PrintStack()
+	/usr/local/go/src/runtime/debug/stack.go:16 +0x34
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Min(0xc420096220, 0x2de020, 0x584007d9)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:155 +0x21f
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Peek(0xc420096220, 0x1, 0xc420156220)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:48 +0x39
+github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420070300)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/architecture/queue.go:54 +0x149
+github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc42000c0f4, 0x4, 0xc4200d80c0, 0xc420070240, 0xc4200d8120)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:26 +0x18e
+created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:78 +0x75
+2016/12/01 19:22:02 QUEUE found reserved job thats ready:  &{58337787-b7b8-11e6-b053-28f0763931b2 1 0 0 1480591317 5 13 {"number":35} 2}
+2016/12/01 19:22:02 heap error - corrupted size &{[{9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2}] 3}
+goroutine 5 [running]:
+runtime/debug.Stack(0x155f8f, 0x86ee7, 0xc4200a40a0)
+	/usr/local/go/src/runtime/debug/stack.go:24 +0x87
+runtime/debug.PrintStack()
+	/usr/local/go/src/runtime/debug/stack.go:16 +0x34
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Min(0xc420096220, 0xc4200961b8, 0x7fffffffffffffff)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:155 +0x21f
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Peek(0xc420096220, 0x2c6360, 0xc420156220)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:48 +0x39
+github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420070300)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/architecture/queue.go:54 +0x149
+github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc42000c0f4, 0x4, 0xc4200d80c0, 0xc420070240, 0xc4200d8120)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:26 +0x18e
+created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:78 +0x75
+2016/12/01 19:22:02 heap error - corrupted size &{[{9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2} {9223372036854775807 -2}] 3}
+goroutine 5 [running]:
+runtime/debug.Stack(0x155f8f, 0x86ee7, 0xc4200a40a0)
+	/usr/local/go/src/runtime/debug/stack.go:24 +0x87
+runtime/debug.PrintStack()
+	/usr/local/go/src/runtime/debug/stack.go:16 +0x34
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Min(0xc420096220, 0x154832, 0xc4200961a0)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:155 +0x21f
+github.com/vimukthi-git/beanstalkg/backend.(*MinHeap).Dequeue(0xc420096220, 0x2c6360, 0xc420156220)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/backend/min_heap.go:53 +0x58
+github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420070300)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/architecture/queue.go:56 +0x1d9
+github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc42000c0f4, 0x4, 0xc4200d80c0, 0xc420070240, 0xc4200d8120)
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:26 +0x18e
+created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
+	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:78 +0x75
 panic: interface conversion: architecture.PriorityQueueItem is backend.ownHeapItem, not *architecture.AwaitingClient
 
-goroutine 22 [running]:
-panic(0x1d0020, 0xc420286480)
+goroutine 5 [running]:
+panic(0x1d0a60, 0xc420073a80)
 	/usr/local/go/src/runtime/panic.go:500 +0x1ae
-github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420072300)
+github.com/vimukthi-git/beanstalkg/architecture.(*Tube).Process(0xc420070300)
 	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/architecture/queue.go:58 +0x29f
-github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc4200d8006, 0x4, 0xc4200b6240, 0xc420072240, 0xc4200b62a0)
+github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler.func1(0xc42000c0f4, 0x4, 0xc4200d80c0, 0xc420070240, 0xc4200d8120)
 	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:26 +0x18e
 created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
 	/Users/vimukthi/projects/go/src/github.com/vimukthi-git/beanstalkg/operation/tube_handler.go:78 +0x75
 exit status 2
+
 ===================

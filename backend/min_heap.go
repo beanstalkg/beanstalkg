@@ -4,6 +4,7 @@ import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"log"
 	"math"
+	"runtime/debug"
 )
 
 /**
@@ -72,14 +73,7 @@ func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
 			h.Store[i] = ownHeapItem{math.MaxInt64, "-2"}
 			h.MinHeapify(i)
 			h.Size = h.Size - 1
-			// cleanup so that we don't waste memory
-			for j := len(h.Store) - 1; j > 0; j-- {
-				if (h.Store[j].Key() == math.MaxInt64 && j > h.Size) {
-					h.Store = h.Store[:len(h.Store)-1]
-				} else {
-					break
-				}
-			}
+			h.clean()
 			return temp
 		}
 	}
@@ -149,9 +143,27 @@ func (h *MinHeap) MinHeapify(i int) {
 
 func (h *MinHeap) Min() architecture.PriorityQueueItem {
 	if h.Size > 0 {
+		if h.Store[0].Key() == math.MaxInt64 {
+			log.Println("heap error - corrupted size", h)
+			debug.PrintStack()
+			h.Size = 0
+			h.clean()
+			return nil
+		}
 		return h.Store[0]
 	} else {
 		return nil
 	}
 
+}
+
+func (h *MinHeap) clean() {
+	// cleanup so that we don't waste memory
+	for j := len(h.Store) - 1; j > 0; j-- {
+		if (h.Store[j].Key() == math.MaxInt64 && j > h.Size) {
+			h.Store = h.Store[:len(h.Store)-1]
+		} else {
+			break
+		}
+	}
 }
