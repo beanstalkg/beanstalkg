@@ -8,9 +8,14 @@ import (
 	"net"
 	"os"
 	"flag"
+	_ "net/http/pprof"
+	"net/http"
 )
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 	port := flag.String("port", "11300", "Port for beanstalkg server")
 	proxy_mode := flag.Bool("proxy_mode", false, "Start server in proxy mode")
 	env := flag.String("env", "local", "Which environment config to use")

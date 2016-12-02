@@ -4,7 +4,8 @@ import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"log"
 	"math"
-	"runtime/debug"
+	//"os"
+	//"runtime/pprof"
 )
 
 /**
@@ -50,8 +51,10 @@ func (h *MinHeap) Peek() architecture.PriorityQueueItem {
 
 func (h *MinHeap) Dequeue() architecture.PriorityQueueItem {
 	if h.Size > 0 {
-		min := h.Min()
-		h.Delete(min.Id())
+		min := h.Store[0]
+		h.Store[0] = h.Store[h.Size - 1]
+		h.Size = h.Size - 1
+		h.MinHeapify(0)
 		return min
 	}
 	return nil
@@ -70,10 +73,9 @@ func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
 	for i := 0; i < h.Size; i++ {
 		if h.Store[i].Id() == id {
 			temp := h.Store[i]
-			h.Store[i] = ownHeapItem{math.MaxInt64, "-2"}
-			h.MinHeapify(i)
+			h.Store[i] = h.Store[h.Size - 1]
 			h.Size = h.Size - 1
-			h.clean()
+			h.MinHeapify(i)
 			return temp
 		}
 	}
@@ -86,6 +88,7 @@ func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
 func (h *MinHeap) DecreaseKey(i int, item architecture.PriorityQueueItem) {
 	// log.Println("queue", h, i)
 	if item.Key() > h.Store[i].Key() {
+		log.Println(h)
 		log.Fatal("new key can not be larger than the current")
 	}
 	h.Store[i] = item
@@ -143,13 +146,13 @@ func (h *MinHeap) MinHeapify(i int) {
 
 func (h *MinHeap) Min() architecture.PriorityQueueItem {
 	if h.Size > 0 {
-		if h.Store[0].Key() == math.MaxInt64 {
-			log.Println("heap error - corrupted size", h)
-			debug.PrintStack()
-			h.Size = 0
-			h.clean()
-			return nil
-		}
+		//if h.Store[0].Key() == math.MaxInt64 {
+		//	log.Println("heap error - corrupted size", h)
+		//	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		//	h.Size = 0
+		//	h.clean()
+		//	return nil
+		//}
 		return h.Store[0]
 	} else {
 		return nil
