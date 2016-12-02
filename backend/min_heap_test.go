@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"testing"
+	"math"
 )
 
 type testHeapItem struct {
@@ -46,7 +47,46 @@ func TestMinHeap_Insert(t *testing.T) {
 		t.Fail()
 	}
 	// m.Delete(string(2))
-	fmt.Println(m.Dequeue().Id(), string(3))
+	fmt.Println(m.Dequeue().Key(), string(3))
+}
+
+func TestMinHeap_InsertCheckDelete(t *testing.T) {
+	m := MinHeap{}
+	m.Enqueue(testHeapItem{1, "one"})
+	m.Enqueue(testHeapItem{1, "two"})
+	m.Enqueue(testHeapItem{1, "three"})
+	m.Enqueue(testHeapItem{1, "four"})
+	fmt.Println(m)
+	item := m.Dequeue().(testHeapItem)
+	if item.Id() != "one" {
+		t.Fail()
+	}
+	fmt.Println(item, m)
+	item = m.Dequeue().(testHeapItem)
+	if item.Id() != "two" {
+		t.Fail()
+	}
+	fmt.Println(item, m)
+	item = m.Dequeue().(testHeapItem)
+	if item.Id() != "four" {
+		t.Fail()
+	}
+	fmt.Println(item, m)
+	item = m.Dequeue().(testHeapItem)
+	if item.Id() != "three" {
+		t.Fail()
+	}
+	item = m.Dequeue().(testHeapItem)
+	if item.Id() != "three" {
+		t.Fail()
+	}
+	fmt.Println(item, m)
+	if m.Store[m.Size].Key() != math.MaxInt64 {
+		t.Fail()
+	}
+	//item = m.Dequeue().(testHeapItem)
+	//fmt.Println(item, m)
+	m.Enqueue(testHeapItem{1, "one"})
 }
 
 func TestIntegration(t *testing.T) {

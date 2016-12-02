@@ -3,11 +3,10 @@ package architecture
 import (
 	"errors"
 	"strings"
-	// "fmt"
-	"github.com/satori/go.uuid"
-	"log"
-	"strconv"
 	"fmt"
+	"github.com/satori/go.uuid"
+	// "log"
+	"strconv"
 )
 
 // TODO extract protocol error messages into a error helper
@@ -28,11 +27,15 @@ const (
 )
 
 const (
-	BAD_FORMAT string = "BAD_FORMAT"
-	UNKNOWN_COMMAND = "UNKNOWN_COMMAND"
-	NOT_IGNORED = "NOT_IGNORED"
-	NOT_FOUND = "NOT_FOUND"
+	BAD_FORMAT      string = "BAD_FORMAT"
+	UNKNOWN_COMMAND        = "UNKNOWN_COMMAND"
+	NOT_IGNORED            = "NOT_IGNORED"
+	NOT_FOUND              = "NOT_FOUND"
+	EXPECTED_CRLF		= "EXPECTED_CRLF"
+	JOB_TOO_BIG 		= "JOB_TOO_BIG"
 )
+
+const MAX_JOB_SIZE int64 = 65536 // 2^16
 
 type Command struct {
 	Name           CommandName
@@ -47,7 +50,7 @@ type Command struct {
 func NewCommand() Command {
 	return Command{
 		MoreToSend: false,
-		Params:map[string]string{},
+		Params:     map[string]string{},
 	}
 }
 
@@ -68,13 +71,13 @@ func (command *Command) Copy() Command {
 		paramsCopy[k] = v
 	}
 	return Command{
-		Name           :command.Name,
-		RawCommand     :command.RawCommand,
-		Params         :paramsCopy,
-		WaitingForMore :command.WaitingForMore,
-		MoreToSend     :command.MoreToSend,
-		Err            :command.Err,
-		Job            :command.Job,
+		Name:           command.Name,
+		RawCommand:     command.RawCommand,
+		Params:         paramsCopy,
+		WaitingForMore: command.WaitingForMore,
+		MoreToSend:     command.MoreToSend,
+		Err:            command.Err,
+		Job:            command.Job,
 	}
 }
 
@@ -96,6 +99,12 @@ func (command *Command) createJobFromParams() error {
 		return errors.New(BAD_FORMAT)
 	}
 
+	if bytes > MAX_JOB_SIZE {
+		return errors.New(JOB_TOO_BIG)
+	} else if bytes != int64(len(command.Params["data"])) {
+		return errors.New(EXPECTED_CRLF)
+	}
+
 	command.Job = *NewJob(
 		uuid.NewV1().String(),
 		pri,
@@ -104,7 +113,7 @@ func (command *Command) createJobFromParams() error {
 		bytes,
 		command.Params["data"],
 	)
-	log.Println("PROTOCOL new job: ", command.Job)
+	// log.Println("PROTOCOL new job: ", command.Job)
 	return nil
 }
 
@@ -258,7 +267,9 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 		// log.Println("GOT MORE", command)
 		switch command.Name {
 		case PUT:
+
 			command.Params["data"] = rawCommand
+			command.RawCommand += ("\r\n" + rawCommand)
 			err := command.createJobFromParams()
 			// log.Println("GOT MORE PUT", c, err)
 			command.Err = err

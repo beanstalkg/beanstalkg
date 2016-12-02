@@ -16,6 +16,8 @@ type PriorityQueue interface {
 	Find(id string) (item PriorityQueueItem)
 	// delete an item and return it by id
 	Delete(id string) PriorityQueueItem
+	// size
+	Size() int
 }
 
 type PriorityQueueItem interface {
@@ -35,6 +37,7 @@ type Tube struct {
 // Process runs all the necessary operations for upkeep of the tube
 // TODO unit test
 func (tube *Tube) Process() {
+	log.Println(tube.AwaitingClients.Size())
 	delayedJob := tube.Delayed.Peek()
 	if delayedJob != nil && delayedJob.Key() <= 0 {
 		log.Println("QUEUE delayed job got ready: ", delayedJob)
@@ -52,6 +55,7 @@ func (tube *Tube) Process() {
 	}
 	// ready jobs are sent
 	if tube.AwaitingClients.Peek() != nil && tube.Ready.Peek() != nil {
+		//log.Println("*********************************************************************")
 		availableClientConnection := tube.AwaitingClients.Dequeue()
 		readyJob := tube.Ready.Dequeue().(*Job)
 		client := availableClientConnection.(*AwaitingClient)
