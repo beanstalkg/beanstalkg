@@ -128,6 +128,7 @@ type AwaitingClient struct {
 	id          string
 	SendChannel chan Command
 	Request     Command
+	QueuedAt    int64
 }
 
 func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClient {
@@ -135,11 +136,12 @@ func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClien
 	a.id = uuid.NewV1().String()
 	a.Request = request
 	a.SendChannel = sendChannel
+	a.QueuedAt = time.Now().Unix()
 	return a
 }
 
 func (w *AwaitingClient) Key() int64 {
-	return 0
+	return w.QueuedAt
 }
 
 func (w *AwaitingClient) Id() string {

@@ -8,6 +8,7 @@ client
         client.use("test", function(err, tubename) {
             if (err == null) {
                 //setInterval(function() {
+                // priority, delay, ttr, payload
                     client.put(1, 0, 5, JSON.stringify({"number": 1}), function(err, jobid) {
                         console.log("put job id", jobid);
                     });
