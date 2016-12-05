@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"testing"
-	"math"
+	"time"
 )
 
 type testHeapItem struct {
-	key int64
-	id  string
+	key       int64
+	id        string
+	timestamp int64
 }
 
 func (t testHeapItem) Key() int64 {
@@ -20,6 +21,17 @@ func (t testHeapItem) Id() string {
 	return t.id
 }
 
+func (t testHeapItem) Timestamp() int64 {
+	return t.timestamp
+}
+
+func (t testHeapItem) Enqueued() {
+	t.timestamp = time.Now().UnixNano()
+}
+
+func (t testHeapItem) Dequeued() {
+}
+
 /**
 5
 INSERT 4
@@ -28,18 +40,18 @@ DELETE 4
 */
 func TestMinHeap_Insert(t *testing.T) {
 	m := MinHeap{}
-	m.Enqueue(testHeapItem{4, string(1)})
+	m.Enqueue(testHeapItem{4, string(1), time.Now().UnixNano()})
 	fmt.Println(m.Min().Key())
 	if m.Min().Key() != 4 {
 		t.Fail()
 	}
-	m.Enqueue(testHeapItem{9, string(2)})
+	m.Enqueue(testHeapItem{9, string(2), time.Now().UnixNano()})
 	fmt.Println(m.Min())
 	if m.Min().Key() != 4 {
 		t.Fail()
 	}
 	m.Delete(string(1))
-	if m.Size != 1 {
+	if m.Size() != 1 {
 		t.Fail()
 	}
 	fmt.Println(m.Min().Key())
@@ -52,10 +64,10 @@ func TestMinHeap_Insert(t *testing.T) {
 
 func TestMinHeap_InsertCheckDelete(t *testing.T) {
 	m := MinHeap{}
-	m.Enqueue(testHeapItem{1, "one"})
-	m.Enqueue(testHeapItem{1, "two"})
-	m.Enqueue(testHeapItem{1, "three"})
-	m.Enqueue(testHeapItem{1, "four"})
+	m.Enqueue(testHeapItem{1, "one", time.Now().UnixNano()})
+	m.Enqueue(testHeapItem{1, "two", time.Now().UnixNano()})
+	m.Enqueue(testHeapItem{1, "three", time.Now().UnixNano()})
+	m.Enqueue(testHeapItem{1, "four", time.Now().UnixNano()})
 	fmt.Println(m)
 	item := m.Dequeue().(testHeapItem)
 	if item.Id() != "one" {
@@ -68,32 +80,32 @@ func TestMinHeap_InsertCheckDelete(t *testing.T) {
 	}
 	fmt.Println(item, m)
 	item = m.Dequeue().(testHeapItem)
+	if item.Id() != "three" {
+		t.Fail()
+	}
+	fmt.Println(item, m)
+	item = m.Dequeue().(testHeapItem)
 	if item.Id() != "four" {
 		t.Fail()
 	}
 	fmt.Println(item, m)
-	item = m.Dequeue().(testHeapItem)
-	if item.Id() != "three" {
+	if m.Dequeue() != nil {
 		t.Fail()
 	}
+	m.Enqueue(testHeapItem{1, "one", time.Now().UnixNano()})
 	item = m.Dequeue().(testHeapItem)
-	if item.Id() != "three" {
-		t.Fail()
-	}
-	fmt.Println(item, m)
-	if m.Store[m.Size].Key() != math.MaxInt64 {
+	if item.Id() != "one" {
 		t.Fail()
 	}
 	//item = m.Dequeue().(testHeapItem)
 	//fmt.Println(item, m)
-	m.Enqueue(testHeapItem{1, "one"})
 }
 
 func TestIntegration(t *testing.T) {
 	tube := architecture.Tube{"test", &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}}
 	//m.Enqueue(testHeapItem{4, string(1)})
 	fmt.Println(tube)
-	tube.Delayed.Enqueue(testHeapItem{4, string(1)})
+	tube.Delayed.Enqueue(testHeapItem{4, string(1), time.Now().UnixNano()})
 	if tube.Delayed.Dequeue().Key() != 4 {
 		t.Fail()
 	}

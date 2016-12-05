@@ -78,7 +78,7 @@ func (client *clientHandler) startSession() {
 		for scanner.Scan() {
 			scan <- scanner.Text()
 		}
-		exit<-true
+		exit <- true
 	}()
 
 	for {
@@ -102,7 +102,7 @@ func (client *clientHandler) startSession() {
 			}
 		case <-client.stop:
 			return
-		case <- exit:
+		case <-exit:
 			return
 		}
 	}

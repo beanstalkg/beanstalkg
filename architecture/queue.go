@@ -1,8 +1,11 @@
 package architecture
 
 import (
-	"log"
+	// "log"
+	"time"
 )
+
+const QUEUE_FREQUENCY time.Duration = 20 // process every 20ms. TODO check why some clients get stuck when this is lower
 
 type PriorityQueue interface {
 	Init()
@@ -23,6 +26,9 @@ type PriorityQueue interface {
 type PriorityQueueItem interface {
 	Key() int64
 	Id() string
+	Timestamp() int64
+	Enqueued()
+	Dequeued()
 }
 
 type Tube struct {
@@ -37,10 +43,10 @@ type Tube struct {
 // Process runs all the necessary operations for upkeep of the tube
 // TODO unit test
 func (tube *Tube) Process() {
-	log.Println(tube.AwaitingClients.Size())
+	// log.Println(tube.AwaitingClients.Size())
 	delayedJob := tube.Delayed.Peek()
 	if delayedJob != nil && delayedJob.Key() <= 0 {
-		log.Println("QUEUE delayed job got ready: ", delayedJob)
+		// log.Println("QUEUE delayed job got ready: ", delayedJob)
 		delayedJob = tube.Delayed.Dequeue()
 		delayedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(delayedJob)
@@ -48,7 +54,7 @@ func (tube *Tube) Process() {
 	// reserved jobs are put to ready
 	reservedJob := tube.Reserved.Peek()
 	if reservedJob != nil && reservedJob.Key() <= 0 {
-		log.Println("QUEUE found reserved job thats ready: ", reservedJob)
+		// log.Println("QUEUE found reserved job thats ready: ", reservedJob)
 		reservedJob = tube.Reserved.Dequeue()
 		reservedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(reservedJob)
@@ -59,7 +65,7 @@ func (tube *Tube) Process() {
 		availableClientConnection := tube.AwaitingClients.Dequeue()
 		readyJob := tube.Ready.Dequeue().(*Job)
 		client := availableClientConnection.(*AwaitingClient)
-		log.Println("QUEUE sending job to client: ", client.id)
+		// log.Println("QUEUE sending job to client: ", client.id)
 		client.Request.Job = *readyJob
 		client.SendChannel <- client.Request
 		readyJob.SetState(RESERVED)
