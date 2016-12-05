@@ -27,6 +27,8 @@ type Job struct {
 
 	// states
 	state State
+
+	timestamp int64
 }
 
 func NewJob(id string, pri, delay, ttr, bytes int64, data string) *Job {
@@ -44,6 +46,7 @@ func NewJob(id string, pri, delay, ttr, bytes int64, data string) *Job {
 		j.state = DELAYED
 		// add to the delayed queue
 	}
+	j.timestamp = time.Now().UnixNano()
 	return j
 }
 
@@ -79,14 +82,14 @@ func (j *Job) SetState(state State) error {
 	case DELAYED:
 		if j.state == RESERVED {
 			j.state = state
-			j.StartedDelayAt = time.Now().Unix()
+			j.StartedDelayAt = time.Now().UnixNano()
 		} else {
 			return errors.New("Invalid state transition to RESERVED")
 		}
 	case RESERVED:
 		if j.state == READY {
 			j.state = state
-			j.StartedTTRAt = time.Now().Unix()
+			j.StartedTTRAt = time.Now().UnixNano()
 		} else {
 			return errors.New("Invalid state transition to RESERVED")
 		}
@@ -111,16 +114,28 @@ func (j *Job) Key() int64 {
 		return j.Pri
 	case DELAYED:
 		// time remaining from Delay till it gets ready becomes priority
-		return j.Delay - (time.Now().Unix() - j.StartedDelayAt)
+		return j.Delay - (time.Now().UnixNano() - j.StartedDelayAt)
 	case RESERVED:
 		// time remaining from TTR till it gets ready becomes the priority
-		return j.TTR - (time.Now().Unix() - j.StartedTTRAt)
+		return j.TTR - (time.Now().UnixNano() - j.StartedTTRAt)
 	}
 	return 0
 }
 
 func (j *Job) Id() string {
 	return j.id
+}
+
+func (j *Job) Timestamp() int64 {
+	return j.timestamp
+}
+
+func (j *Job) Enqueued() {
+	j.timestamp = time.Now().UnixNano()
+}
+
+func (j *Job) Dequeued() {
+	j.timestamp = time.Now().UnixNano()
 }
 
 // AwaitingClient stores an awaiting client send channel for a tube
@@ -136,7 +151,7 @@ func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClien
 	a.id = uuid.NewV1().String()
 	a.Request = request
 	a.SendChannel = sendChannel
-	a.QueuedAt = time.Now().Unix()
+	a.QueuedAt = time.Now().UnixNano()
 	return a
 }
 
@@ -146,4 +161,15 @@ func (w *AwaitingClient) Key() int64 {
 
 func (w *AwaitingClient) Id() string {
 	return w.id
+}
+
+func (w *AwaitingClient) Timestamp() int64 {
+	return w.QueuedAt
+}
+
+func (w *AwaitingClient) Enqueued() {
+	w.QueuedAt = time.Now().UnixNano()
+}
+
+func (w *AwaitingClient) Dequeued() {
 }

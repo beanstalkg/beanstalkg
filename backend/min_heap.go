@@ -6,6 +6,7 @@ import (
 	"math"
 	//"os"
 	//"runtime/pprof"
+	"time"
 )
 
 /**
@@ -16,6 +17,7 @@ Dont want to use built in Heap for now. Easy to do optimizations
 type ownHeapItem struct {
 	key int64
 	id  string
+	timestamp int64
 }
 
 func (t ownHeapItem) Key() int64 {
@@ -24,6 +26,17 @@ func (t ownHeapItem) Key() int64 {
 
 func (t ownHeapItem) Id() string {
 	return t.id
+}
+
+func (t ownHeapItem) Timestamp() int64 {
+	return t.timestamp
+}
+
+func (t ownHeapItem) Enqueued() {
+	t.timestamp = time.Now().UnixNano()
+}
+
+func (t ownHeapItem) Dequeued() {
 }
 
 type MinHeap struct {
@@ -40,8 +53,9 @@ func (h *MinHeap) Init() {
 
 func (h *MinHeap) Enqueue(item architecture.PriorityQueueItem) {
 	// h.Size = h.Size + 1
-	h.Store = append(h.Store, ownHeapItem{math.MaxInt64, "-2"})
+	h.Store = append(h.Store, ownHeapItem{math.MaxInt64, "-2", time.Now().UnixNano()})
 	h.DecreaseKey(h.Size() - 1, item)
+	item.Enqueued()
 }
 
 func (h *MinHeap) Peek() architecture.PriorityQueueItem {
@@ -52,12 +66,14 @@ func (h *MinHeap) Dequeue() architecture.PriorityQueueItem {
 	if h.Size() == 1 {
 		min := h.Store[0]
 		h.Store = nil
+		min.Dequeued()
 		return min
 	} else if h.Size() > 1 {
 		min := h.Store[0]
 		h.Store[0] = h.Store[h.Size() - 1]
 		h.Store = h.Store[:(h.Size() - 1)]
 		h.MinHeapify(0)
+		min.Dequeued()
 		return min
 	}
 	return nil
@@ -125,29 +141,31 @@ func (h *MinHeap) Right(i int) int {
 }
 
 func (h *MinHeap) MinHeapify(i int) {
-	// log.Println("i=", i)
+	// log.Println("i=", i, h.Store[i].Timestamp())
 	l := h.Left(i)
 	r := h.Right(i)
 	// log.Println("l=", l)
 	// log.Println("r=", r)
-	smallest := 0
-	if l < h.Size() && h.Store[l].Key() < h.Store[i].Key() {
-		//log.Println("l=", l)
-		//log.Println("h.Store[l]", h.Store[l])
-		smallest = l
-	} else {
-		smallest = i
+	smallest := i
+	if l < h.Size() {
+		if h.Store[l].Key() < h.Store[i].Key() ||
+			(h.Store[l].Key() == h.Store[i].Key() &&
+				h.Store[l].Timestamp() < h.Store[i].Timestamp()) {
+			// log.Println("l=", l, h.Store[l].Timestamp())
+			smallest = l
+		}
 	}
-	//log.Println(r, h.Size)
-	//log.Println("l=", l)
-	//log.Println("i=", i)
-	if r < h.Size() && h.Store[r].Key() < h.Store[smallest].Key() {
-		//log.Println("r=", r)
-		//log.Println("h.Store[r]", h.Store[r])
-		smallest = r
+	if r < h.Size() {
+		if h.Store[r].Key() < h.Store[smallest].Key() ||
+			(h.Store[r].Key() == h.Store[smallest].Key() &&
+				h.Store[r].Timestamp() < h.Store[smallest].Timestamp()) {
+			// log.Println("r=", r, h.Store[r].Timestamp())
+			smallest = r
+		}
 	}
 	// log.Println("smallest=", smallest)
 	if smallest != i {
+		// log.Println("smallest=", smallest, ", i=", i)
 		temp := h.Store[i]
 		h.Store[i] = h.Store[smallest]
 		h.Store[smallest] = temp

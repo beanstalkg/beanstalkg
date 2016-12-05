@@ -23,6 +23,9 @@ type PriorityQueue interface {
 type PriorityQueueItem interface {
 	Key() int64
 	Id() string
+	Timestamp() int64
+	Enqueued()
+	Dequeued()
 }
 
 type Tube struct {
