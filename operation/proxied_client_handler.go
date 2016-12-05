@@ -9,11 +9,11 @@ import (
 )
 
 type clientProxiedHandler struct {
-	conn                           net.Conn
-	proxiedServers 			[]chan string
-	serverStatus []bool
-	stop                           chan bool
-	error				chan int
+	conn           net.Conn
+	proxiedServers []chan string
+	serverStatus   []bool
+	stop           chan bool
+	error          chan int
 }
 
 func NewProxiedClientHandler(
@@ -29,10 +29,10 @@ func NewProxiedClientHandler(
 			proxiedServers = append(proxiedServers, createProxyServerHandler(index, server, stop, errorChannel))
 		}
 		client := clientProxiedHandler{
-			conn: conn,
+			conn:           conn,
 			proxiedServers: proxiedServers,
-			stop: stop,
-			error: errorChannel,
+			stop:           stop,
+			error:          errorChannel,
 		}
 		client.startSession()
 		log.Println("PROXIED_CLIENT_HANDLER exit")
@@ -54,7 +54,7 @@ func (client *clientProxiedHandler) startSession() {
 				c = architecture.NewCommand()
 			}
 		}
-		exit<-true
+		exit <- true
 	}()
 
 	for {
@@ -74,7 +74,7 @@ func (client *clientProxiedHandler) startSession() {
 				}
 				chosen, value, _ := reflect.Select(cases)
 				choose := 0 // TODO configurable
-				if (chosen == choose) {
+				if chosen == choose {
 					chosenReply = value.Interface().(string)
 				}
 			}
@@ -88,8 +88,8 @@ func (client *clientProxiedHandler) startSession() {
 		case id := <-client.error:
 			log.Println("PROXIED_CLIENT_HANDLER error from: ", id, len(client.proxiedServers))
 			client.proxiedServers[id] = client.proxiedServers[len(client.proxiedServers)-1] // Replace id with the last one.
-			client.proxiedServers = client.proxiedServers[:len(client.proxiedServers)-1]   // Chop off the last one.
-		case <- exit:
+			client.proxiedServers = client.proxiedServers[:len(client.proxiedServers)-1]    // Chop off the last one.
+		case <-exit:
 			return
 		}
 	}
@@ -124,20 +124,19 @@ func createProxyServerHandler(id int, url string, stop chan bool, error chan int
 
 		for {
 			select {
-			case command := <- com:
+			case command := <-com:
 				_, err := rConn.Write([]byte(command + "\r\n"))
 				if err != nil {
 					log.Println(err)
-					error<-id
+					error <- id
 					return
 				}
-			case reply := <- scan:
+			case reply := <-scan:
 				com <- reply
-			case <- stop:
+			case <-stop:
 				return
 			}
 		}
 	}()
 	return com
 }
-

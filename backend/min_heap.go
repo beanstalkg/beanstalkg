@@ -15,8 +15,8 @@ Dont want to use built in Heap for now. Easy to do optimizations
 */
 
 type ownHeapItem struct {
-	key int64
-	id  string
+	key       int64
+	id        string
 	timestamp int64
 }
 
@@ -54,7 +54,7 @@ func (h *MinHeap) Init() {
 func (h *MinHeap) Enqueue(item architecture.PriorityQueueItem) {
 	// h.Size = h.Size + 1
 	h.Store = append(h.Store, ownHeapItem{math.MaxInt64, "-2", time.Now().UnixNano()})
-	h.DecreaseKey(h.Size() - 1, item)
+	h.DecreaseKey(h.Size()-1, item)
 	item.Enqueued()
 }
 
@@ -70,7 +70,7 @@ func (h *MinHeap) Dequeue() architecture.PriorityQueueItem {
 		return min
 	} else if h.Size() > 1 {
 		min := h.Store[0]
-		h.Store[0] = h.Store[h.Size() - 1]
+		h.Store[0] = h.Store[h.Size()-1]
 		h.Store = h.Store[:(h.Size() - 1)]
 		h.MinHeapify(0)
 		min.Dequeued()

@@ -8,8 +8,8 @@ import (
 )
 
 type testHeapItem struct {
-	key int64
-	id  string
+	key       int64
+	id        string
 	timestamp int64
 }
 

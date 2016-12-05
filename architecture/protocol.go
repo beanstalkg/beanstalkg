@@ -2,9 +2,9 @@ package architecture
 
 import (
 	"errors"
-	"strings"
 	"fmt"
 	"github.com/satori/go.uuid"
+	"strings"
 	// "log"
 	"strconv"
 )
@@ -31,8 +31,8 @@ const (
 	UNKNOWN_COMMAND        = "UNKNOWN_COMMAND"
 	NOT_IGNORED            = "NOT_IGNORED"
 	NOT_FOUND              = "NOT_FOUND"
-	EXPECTED_CRLF		= "EXPECTED_CRLF"
-	JOB_TOO_BIG 		= "JOB_TOO_BIG"
+	EXPECTED_CRLF          = "EXPECTED_CRLF"
+	JOB_TOO_BIG            = "JOB_TOO_BIG"
 )
 
 const MAX_JOB_SIZE int64 = 65536 // 2^16

@@ -2,14 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"github.com/vimukthi-git/beanstalkg/operation"
 	"log"
 	"net"
-	"os"
-	"flag"
-	_ "net/http/pprof"
 	"net/http"
+	_ "net/http/pprof"
+	"os"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 	checkError(err)
 	stop := make(chan bool)
 
-	if (!*proxy_mode) {
+	if !*proxy_mode {
 		tubeRegister := make(chan architecture.Command)
 		// use this tube to send the channels for each individual tube to the clients when the do 'use' command
 		useTubeConnectionReceiver := make(chan chan architecture.Command)
@@ -54,7 +54,6 @@ func main() {
 			}
 			operation.NewProxiedClientHandler(conn, config.Beanstalks, stop)
 		}
-
 
 	}
 }
