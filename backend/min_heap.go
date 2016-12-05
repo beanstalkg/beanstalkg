@@ -76,10 +76,11 @@ func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
 	for i := 0; i < h.Size(); i++ {
 		if h.Store[i].Id() == id {
 			temp := h.Store[i]
-			if i == 0 {
+			if len(h.Store) == 1 {
 				h.Store = nil
 			} else {
-				h.Store[i] = h.Store[h.Size() - 1]
+				// remove item in the middle
+				h.Store = append(h.Store[:i], h.Store[i+1:]...)
 				h.MinHeapify(i)
 			}
 			return temp
