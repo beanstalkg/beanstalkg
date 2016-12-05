@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"github.com/vimukthi-git/beanstalkg/backend"
-	"log"
+	// "log"
 	"time"
 )
 
@@ -17,7 +17,7 @@ func NewTubeHandler(
 	// commands := make(chan architecture.Command)
 	go func() {
 		tube := createTube(name)
-		ticker := time.NewTicker(1 * time.Second)
+		ticker := time.NewTicker(architecture.QUEUE_FREQUENCY * time.Millisecond)
 		// TODO make sure all logic that can be moved to Tube struct is moved there
 		for {
 			select {
@@ -43,7 +43,7 @@ func NewTubeHandler(
 					watchedTubeConnectionsReceiver <- sendChan
 				case architecture.DELETE:
 					if tube.Buried.Delete(c.Params["id"]) != nil || tube.Reserved.Delete(c.Params["id"]) != nil {
-						log.Println("TUBE_HANDLER deleted job: ", c, name)
+						// log.Println("TUBE_HANDLER deleted job: ", c, name)
 						c.Err = nil
 					} else {
 						c.Err = errors.New(architecture.NOT_FOUND)
@@ -52,7 +52,7 @@ func NewTubeHandler(
 				case architecture.RELEASE:
 					job := tube.Reserved.Delete(c.Params["id"]).(*architecture.Job)
 					if job != nil {
-						log.Println("TUBE_HANDLER released job: ", c, name)
+						// log.Println("TUBE_HANDLER released job: ", c, name)
 						job.SetState(architecture.READY)
 						tube.Ready.Enqueue(job)
 					} else {
@@ -62,7 +62,7 @@ func NewTubeHandler(
 				case architecture.BURY:
 					job := tube.Reserved.Delete(c.Params["id"]).(*architecture.Job)
 					if job != nil {
-						log.Println("TUBE_HANDLER buried job: ", c, name)
+						// log.Println("TUBE_HANDLER buried job: ", c, name)
 						job.SetState(architecture.BURIED)
 						tube.Buried.Enqueue(job)
 					} else {

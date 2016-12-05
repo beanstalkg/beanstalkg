@@ -34,6 +34,6 @@ client.connect();
              ob.number = ob.number + 1;
              yield client.destroyAsync(res[0]);
              client.putAsync(1, 0, 5, JSON.stringify(ob));
-             setTimeout(function() {doit(client)}, 10);
+             setTimeout(function() {doit(client)}, 1);
         });
     }
