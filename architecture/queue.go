@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const QUEUE_FREQUENCY time.Duration = 20
+const QUEUE_FREQUENCY time.Duration = 20 // process every 20ms
 
 type PriorityQueue interface {
 	Init()
