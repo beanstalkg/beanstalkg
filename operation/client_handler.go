@@ -111,12 +111,12 @@ func (client *clientHandler) startSession() {
 }
 
 func (client *clientHandler) handleBasicCommand(command architecture.Command) architecture.Command {
+	log.Debug("CLIENT_HANDLER: ", command)
 	switch command.Name {
 	case architecture.USE:
 		// send command to tube register
 		client.registerConnection <- command.Copy()
 		client.usedTubeConnection = <-client.tubeConnectionReceiver
-		log.Info("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
 		client.usedTubeConnection <- command.Copy() // send the command to tube
 		command = <-client.usedTubeConnection       // get the response
@@ -165,7 +165,6 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 	case architecture.TOUCH:
 
 	}
-
 	return command
 }
 

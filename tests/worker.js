@@ -10,9 +10,9 @@ bb.promisifyAll(client, {multiArgs: true});
 client.on('connect', function () {
      co(function* () {
      console.log("connected");
-                yield client.watchAsync("test");
-                yield client.ignoreAsync("default");
-                yield client.useAsync("test");
+//                yield client.watchAsync("test");
+//                yield client.ignoreAsync("default");
+//                yield client.useAsync("test");
                yield doit(client);
 
             }).catch(function(e) {

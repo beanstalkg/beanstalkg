@@ -15,6 +15,8 @@ import (
 func main() {
 	initLogging()
 	go func() {
+		// https://golang.org/pkg/net/http/pprof/
+		// http://localhost:6060/debug/pprof/goroutine?debug=2
 		log.Info(http.ListenAndServe("localhost:6060", nil))
 	}()
 	port := flag.String("port", "11300", "Port for beanstalkg server")
@@ -87,7 +89,7 @@ func getConfig(env string) Configuration {
 
 var log = logging.MustGetLogger("BEANSTALKG")
 var format = logging.MustStringFormatter(
-	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{message}`,
 )
 
 func initLogging() {

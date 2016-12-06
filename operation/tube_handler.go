@@ -26,6 +26,7 @@ func NewTubeHandler(
 				tube.Process()
 				tube.ProcessTimedClients()
 			case c := <-commands:
+				log.Debug("TUBE_HANDLER received: ", c)
 				switch c.Name {
 				case architecture.PUT:
 					if c.Job.State() == architecture.READY {
@@ -43,7 +44,6 @@ func NewTubeHandler(
 					watchedTubeConnectionsReceiver <- sendChan
 					tube.AwaitingClients.Enqueue(architecture.NewAwaitingClient(c, sendChan))
 				case architecture.RESERVE_WITH_TIMEOUT:
-					log.Info("reserve-with-timeout", c)
 					sendChan := make(chan architecture.Command)
 					watchedTubeConnectionsReceiver <- sendChan
 					client := architecture.NewAwaitingClient(c, sendChan)

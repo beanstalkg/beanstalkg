@@ -101,6 +101,7 @@ func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
 				h.Store = append(h.Store[:i], h.Store[i+1:]...)
 				h.MinHeapify(i)
 			}
+			log.Debug("MIN_HEAP", h.Store)
 			return temp
 		}
 	}
