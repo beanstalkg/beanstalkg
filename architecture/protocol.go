@@ -33,6 +33,7 @@ const (
 	NOT_FOUND              = "NOT_FOUND"
 	EXPECTED_CRLF          = "EXPECTED_CRLF"
 	JOB_TOO_BIG            = "JOB_TOO_BIG"
+	TIMED_OUT              = "TIMED_OUT"
 )
 
 const MAX_JOB_SIZE int64 = 65536 // 2^16
@@ -402,7 +403,12 @@ func (command *Command) Reply() (bool, string) {
 		}
 	case RESERVE_WITH_TIMEOUT:
 		if command.Err == nil {
-			return false, "INSERTED " + command.Job.Id()
+			if !command.MoreToSend {
+				command.MoreToSend = true
+				return true, fmt.Sprintf("RESERVED %s %d", command.Job.Id(), command.Job.Bytes)
+			} else {
+				return false, command.Job.Data
+			}
 		}
 	case DELETE:
 		// The client then waits for one line of response, which may be:

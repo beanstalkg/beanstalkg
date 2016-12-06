@@ -4,6 +4,8 @@ import (
 	"errors"
 	"github.com/satori/go.uuid"
 	"time"
+	"strconv"
+	"log"
 )
 
 type State int
@@ -14,6 +16,8 @@ const ( // iota is reset to 0
 	RESERVED              // = 2
 	BURIED                // = 3
 )
+
+const NANO = 1000000000
 
 type Job struct {
 	id             string
@@ -44,6 +48,7 @@ func NewJob(id string, pri, delay, ttr, bytes int64, data string) *Job {
 		// add to the ready queue
 	} else {
 		j.state = DELAYED
+		j.StartedDelayAt = time.Now().UnixNano()
 		// add to the delayed queue
 	}
 	j.timestamp = time.Now().UnixNano()
@@ -114,10 +119,11 @@ func (j *Job) Key() int64 {
 		return j.Pri
 	case DELAYED:
 		// time remaining from Delay till it gets ready becomes priority
-		return j.Delay - (time.Now().UnixNano() - j.StartedDelayAt)
+		// log.Println(j.Delay * NANO, time.Now().UnixNano(), j.StartedDelayAt)
+		return j.Delay * NANO - (time.Now().UnixNano() - j.StartedDelayAt)
 	case RESERVED:
 		// time remaining from TTR till it gets ready becomes the priority
-		return j.TTR - (time.Now().UnixNano() - j.StartedTTRAt)
+		return j.TTR * NANO - (time.Now().UnixNano() - j.StartedTTRAt)
 	}
 	return 0
 }
@@ -144,6 +150,7 @@ type AwaitingClient struct {
 	SendChannel chan Command
 	Request     Command
 	QueuedAt    int64
+	Timeout	    int64
 }
 
 func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClient {
@@ -152,11 +159,27 @@ func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClien
 	a.Request = request
 	a.SendChannel = sendChannel
 	a.QueuedAt = time.Now().UnixNano()
+	a.Timeout = -1
+	if _, ok := request.Params["timeout"]; ok {
+		timeout, err := strconv.ParseInt(request.Params["timeout"], 10, 0)
+		if err == nil {
+			a.Timeout = timeout * NANO // convert to nano seconds
+		} else {
+			log.Println(err)
+		}
+	}
+	// log.Println(a)
 	return a
 }
 
 func (w *AwaitingClient) Key() int64 {
 	return w.QueuedAt
+}
+
+func (w *AwaitingClient) Timeleft() int64 {
+	timeleft := w.Timeout - (time.Now().UnixNano() - w.QueuedAt)
+	// log.Println(timeleft, w.Timeout, time.Now().UnixNano(), w.QueuedAt)
+	return timeleft
 }
 
 func (w *AwaitingClient) Id() string {

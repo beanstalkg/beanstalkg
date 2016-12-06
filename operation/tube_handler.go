@@ -6,6 +6,7 @@ import (
 	"github.com/vimukthi-git/beanstalkg/backend"
 	// "log"
 	"time"
+	"log"
 )
 
 func NewTubeHandler(
@@ -24,6 +25,7 @@ func NewTubeHandler(
 			case <-ticker.C:
 				// log.Println("House Keeping Started for: ", name)
 				tube.Process()
+				tube.ProcessTimedClients()
 			case c := <-commands:
 				switch c.Name {
 				case architecture.PUT:
@@ -39,8 +41,16 @@ func NewTubeHandler(
 					commands <- c.Copy()
 				case architecture.RESERVE:
 					sendChan := make(chan architecture.Command)
-					tube.AwaitingClients.Enqueue(architecture.NewAwaitingClient(c, sendChan))
 					watchedTubeConnectionsReceiver <- sendChan
+					tube.AwaitingClients.Enqueue(architecture.NewAwaitingClient(c, sendChan))
+				case architecture.RESERVE_WITH_TIMEOUT:
+					log.Println("reserve-with-timeout", c)
+					sendChan := make(chan architecture.Command)
+					watchedTubeConnectionsReceiver <- sendChan
+					client := architecture.NewAwaitingClient(c, sendChan)
+					tube.AwaitingClients.Enqueue(client)
+					tube.AwaitingTimedClients[client.Id()] = client
+					tube.ProcessTimedClients()
 				case architecture.DELETE:
 					if tube.Buried.Delete(c.Params["id"]) != nil || tube.Reserved.Delete(c.Params["id"]) != nil {
 						// log.Println("TUBE_HANDLER deleted job: ", c, name)
@@ -50,8 +60,9 @@ func NewTubeHandler(
 					}
 					commands <- c.Copy()
 				case architecture.RELEASE:
-					job := tube.Reserved.Delete(c.Params["id"]).(*architecture.Job)
-					if job != nil {
+					item := tube.Reserved.Delete(c.Params["id"])
+					if item != nil {
+						job := item.(*architecture.Job)
 						// log.Println("TUBE_HANDLER released job: ", c, name)
 						job.SetState(architecture.READY)
 						tube.Ready.Enqueue(job)
@@ -60,8 +71,9 @@ func NewTubeHandler(
 					}
 					commands <- c.Copy()
 				case architecture.BURY:
-					job := tube.Reserved.Delete(c.Params["id"]).(*architecture.Job)
-					if job != nil {
+					item := tube.Reserved.Delete(c.Params["id"])
+					if item != nil {
+						job := item.(*architecture.Job)
 						// log.Println("TUBE_HANDLER buried job: ", c, name)
 						job.SetState(architecture.BURIED)
 						tube.Buried.Enqueue(job)
@@ -82,12 +94,13 @@ func NewTubeHandler(
 // by changing only here
 func createTube(name string) *architecture.Tube {
 	t := &architecture.Tube{
-		name,
-		&backend.MinHeap{},
-		&backend.MinHeap{},
-		&backend.MinHeap{},
-		&backend.MinHeap{},
-		&backend.MinHeap{},
+		Name: name,
+		Ready: &backend.MinHeap{},
+		Reserved: &backend.MinHeap{},
+		Delayed: &backend.MinHeap{},
+		Buried: &backend.MinHeap{},
+		AwaitingClients: &backend.MinHeap{},
+		AwaitingTimedClients: make(map[string]*architecture.AwaitingClient),
 	}
 	t.Ready.Init()
 	t.Delayed.Init()

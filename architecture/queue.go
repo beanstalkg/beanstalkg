@@ -1,8 +1,9 @@
 package architecture
 
 import (
-	// "log"
 	"time"
+	"errors"
+	"log"
 )
 
 const QUEUE_FREQUENCY time.Duration = 20  * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
@@ -39,6 +40,7 @@ type Tube struct {
 	Delayed         PriorityQueue
 	Buried          PriorityQueue
 	AwaitingClients PriorityQueue
+	AwaitingTimedClients map[string]*AwaitingClient
 }
 
 // Process runs all the necessary operations for upkeep of the tube
@@ -77,19 +79,39 @@ func (tube *Tube) Process() {
 	counter = 0
 	// ready jobs are sent
 	for tube.AwaitingClients.Peek() != nil && tube.Ready.Peek() != nil {
-		//log.Println("*********************************************************************")
 		availableClientConnection := tube.AwaitingClients.Dequeue()
-		readyJob := tube.Ready.Dequeue().(*Job)
 		client := availableClientConnection.(*AwaitingClient)
 		// log.Println("QUEUE sending job to client: ", client.id)
+		readyJob := tube.Ready.Dequeue().(*Job)
 		client.Request.Job = *readyJob
-		client.SendChannel <- client.Request
+		client.SendChannel <- client.Request.Copy()
 		readyJob.SetState(RESERVED)
 		tube.Reserved.Enqueue(readyJob)
 		if counter > MAX_JOBS_PER_ITERATION {
 			break;
 		} else {
 			counter++
+		}
+	}
+}
+
+// ProcessTimedClients reserves jobs for or times out the clients with a timeout
+func (tube *Tube) ProcessTimedClients() {
+	for id, client := range tube.AwaitingTimedClients {
+		// log.Println(client)
+		if client.Timeleft() <= 0 {
+			if tube.Ready.Peek() != nil {
+				readyJob := tube.Ready.Dequeue().(*Job)
+				client.Request.Job = *readyJob
+				client.SendChannel <- client.Request.Copy()
+				readyJob.SetState(RESERVED)
+				tube.Reserved.Enqueue(readyJob)
+			} else {
+				client.Request.Err = errors.New(TIMED_OUT)
+				client.SendChannel <- client.Request.Copy()
+			}
+			delete(tube.AwaitingTimedClients, id)
+			tube.AwaitingClients.Delete(id)
 		}
 	}
 }
