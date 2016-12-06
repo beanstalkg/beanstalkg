@@ -2,12 +2,14 @@ package backend
 
 import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
-	"log"
 	"math"
 	//"os"
 	//"runtime/pprof"
 	"time"
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("BEANSTALKG")
 
 /**
 +++++ MIN HEAP BACKEND ++++++
@@ -115,7 +117,7 @@ func (h *MinHeap) Size() int {
 func (h *MinHeap) DecreaseKey(i int, item architecture.PriorityQueueItem) {
 	// log.Println("queue", h, i)
 	if item.Key() > h.Store[i].Key() {
-		log.Println(h, h.Store[i], item)
+		log.Error(h, h.Store[i], item)
 		log.Fatal("new key can not be larger than the current")
 	}
 	h.Store[i] = item

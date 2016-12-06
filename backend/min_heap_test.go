@@ -102,7 +102,7 @@ func TestMinHeap_InsertCheckDelete(t *testing.T) {
 }
 
 func TestIntegration(t *testing.T) {
-	tube := architecture.Tube{"test", &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}}
+	tube := architecture.Tube{"test", &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, make(map[string]*architecture.AwaitingClient)}
 	//m.Enqueue(testHeapItem{4, string(1)})
 	fmt.Println(tube)
 	tube.Delayed.Enqueue(testHeapItem{4, string(1), time.Now().UnixNano()})
