@@ -3,7 +3,6 @@ package architecture
 import (
 	"time"
 	"errors"
-	"log"
 )
 
 const QUEUE_FREQUENCY time.Duration = 20  * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
