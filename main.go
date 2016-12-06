@@ -12,11 +12,6 @@ import (
 	"os"
 )
 
-var log = logging.MustGetLogger("BEANSTALKG")
-var format = logging.MustStringFormatter(
-	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
-)
-
 func main() {
 	initLogging()
 	go func() {
@@ -88,6 +83,12 @@ func getConfig(env string) Configuration {
 	}
 	return envConf
 }
+
+
+var log = logging.MustGetLogger("BEANSTALKG")
+var format = logging.MustStringFormatter(
+	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+)
 
 func initLogging() {
 	// For demo purposes, create two backend for os.Stderr.
