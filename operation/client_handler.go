@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"errors"
 	"github.com/vimukthi-git/beanstalkg/architecture"
-	"log"
 	"net"
 	"reflect"
 	"strconv"
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("BEANSTALKG")
 
 type clientHandler struct {
 	conn                           net.Conn
@@ -41,7 +43,7 @@ func NewClientHandler(
 			stop,
 		}
 		client.startSession()
-		log.Println("CLIENT_HANDLER exit")
+		log.Info("CLIENT_HANDLER exit")
 		return
 	}()
 }
@@ -51,7 +53,7 @@ func (client *clientHandler) handleReply(c architecture.Command) error {
 		more, reply := c.Reply()
 		_, err := client.conn.Write([]byte(reply + "\r\n"))
 		if err != nil {
-			log.Print(err)
+			log.Error(err)
 			return err
 		}
 		if !more {
@@ -114,7 +116,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		// send command to tube register
 		client.registerConnection <- command.Copy()
 		client.usedTubeConnection = <-client.tubeConnectionReceiver
-		log.Println("CLIENT_HANDLER started using tube: ", command.Params["tube"])
+		log.Info("CLIENT_HANDLER started using tube: ", command.Params["tube"])
 	case architecture.PUT:
 		client.usedTubeConnection <- command.Copy() // send the command to tube
 		command = <-client.usedTubeConnection       // get the response

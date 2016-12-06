@@ -5,16 +5,22 @@ import (
 	"flag"
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"github.com/vimukthi-git/beanstalkg/operation"
-	"log"
 	"net"
 	"net/http"
+	"github.com/op/go-logging"
 	_ "net/http/pprof"
 	"os"
 )
 
+var log = logging.MustGetLogger("BEANSTALKG")
+var format = logging.MustStringFormatter(
+	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+)
+
 func main() {
+	initLogging()
 	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
+		log.Info(http.ListenAndServe("localhost:6060", nil))
 	}()
 	port := flag.String("port", "11300", "Port for beanstalkg server")
 	proxy_mode := flag.Bool("proxy_mode", false, "Start server in proxy mode")
@@ -33,7 +39,7 @@ func main() {
 		useTubeConnectionReceiver := make(chan chan architecture.Command)
 		watchedTubeConnectionsReceiver := make(chan chan architecture.Command)
 		operation.NewTubeRegister(tubeRegister, useTubeConnectionReceiver, watchedTubeConnectionsReceiver, stop)
-		log.Println("BEANSTALKG listening on: ", *port)
+		log.Info("BEANSTALKG listening on: ", *port)
 
 		for {
 			// log.Println("BEANSTALKG Waiting..")
@@ -45,7 +51,7 @@ func main() {
 		}
 	} else {
 		config := getConfig(*env)
-		log.Println("BEANSTALKG started in proxy mode, now listening on: ", *port)
+		log.Info("BEANSTALKG started in proxy mode, now listening on: ", *port)
 		for {
 			// log.Println("BEANSTALKG Waiting..")
 			conn, err := listener.Accept()
@@ -81,4 +87,22 @@ func getConfig(env string) Configuration {
 		log.Fatal("No configuration found for the given environment name")
 	}
 	return envConf
+}
+
+func initLogging() {
+	// For demo purposes, create two backend for os.Stderr.
+	// backend1 := logging.NewLogBackend(os.Stderr, "", 0)
+	backend2 := logging.NewLogBackend(os.Stderr, "", 0)
+
+	// For messages written to backend2 we want to add some additional
+	// information to the output, including the used log level and the name of
+	// the function.
+	backend2Formatter := logging.NewBackendFormatter(backend2, format)
+
+	// Only errors and more severe messages should be sent to backend1
+	backend1Leveled := logging.AddModuleLevel(backend2Formatter)
+	backend1Leveled.SetLevel(logging.DEBUG, "")
+
+	// Set the backends to be used.
+	logging.SetBackend(backend1Leveled)
 }

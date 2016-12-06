@@ -6,7 +6,6 @@ import (
 	"github.com/vimukthi-git/beanstalkg/backend"
 	// "log"
 	"time"
-	"log"
 )
 
 func NewTubeHandler(
@@ -44,7 +43,7 @@ func NewTubeHandler(
 					watchedTubeConnectionsReceiver <- sendChan
 					tube.AwaitingClients.Enqueue(architecture.NewAwaitingClient(c, sendChan))
 				case architecture.RESERVE_WITH_TIMEOUT:
-					log.Println("reserve-with-timeout", c)
+					log.Info("reserve-with-timeout", c)
 					sendChan := make(chan architecture.Command)
 					watchedTubeConnectionsReceiver <- sendChan
 					client := architecture.NewAwaitingClient(c, sendChan)

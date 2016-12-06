@@ -3,7 +3,10 @@ package architecture
 import (
 	"time"
 	"errors"
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("BEANSTALKG")
 
 const QUEUE_FREQUENCY time.Duration = 20  * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
 const MAX_JOBS_PER_ITERATION int = 20
@@ -50,7 +53,7 @@ func (tube *Tube) Process() {
 	for delayedJob := tube.Delayed.Peek();
 			delayedJob != nil && delayedJob.Key() <= 0;
 			delayedJob = tube.Delayed.Peek(){
-		// log.Println("QUEUE delayed job got ready: ", delayedJob)
+		log.Debug("QUEUE delayed job got ready: ", delayedJob)
 		delayedJob = tube.Delayed.Dequeue()
 		delayedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(delayedJob)

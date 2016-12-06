@@ -5,7 +5,6 @@ import (
 	"github.com/satori/go.uuid"
 	"time"
 	"strconv"
-	"log"
 )
 
 type State int
@@ -165,7 +164,7 @@ func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClien
 		if err == nil {
 			a.Timeout = timeout * NANO // convert to nano seconds
 		} else {
-			log.Println(err)
+			log.Error(err)
 		}
 	}
 	// log.Println(a)
