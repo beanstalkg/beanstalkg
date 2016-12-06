@@ -28,7 +28,7 @@ client.connect();
 
     function doit(client) {
         return co(function* () {
-             var res = yield client.reserveAsync();
+             var res = yield client.reserve_with_timeoutAsync(10);
              console.log(res[1].toString());
              var ob = JSON.parse(res[1].toString());
              ob.number = ob.number + 1;
