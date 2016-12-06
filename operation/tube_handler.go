@@ -17,7 +17,7 @@ func NewTubeHandler(
 	// commands := make(chan architecture.Command)
 	go func() {
 		tube := createTube(name)
-		ticker := time.NewTicker(architecture.QUEUE_FREQUENCY * time.Millisecond)
+		ticker := time.NewTicker(architecture.QUEUE_FREQUENCY)
 		// TODO make sure all logic that can be moved to Tube struct is moved there
 		for {
 			select {

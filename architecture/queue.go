@@ -5,7 +5,8 @@ import (
 	"time"
 )
 
-const QUEUE_FREQUENCY time.Duration = 20 // process every 20ms. TODO check why some clients get stuck when this is lower
+const QUEUE_FREQUENCY time.Duration = 20  * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
+const MAX_JOBS_PER_ITERATION int = 20
 
 type PriorityQueue interface {
 	Init()
@@ -44,23 +45,38 @@ type Tube struct {
 // TODO unit test
 func (tube *Tube) Process() {
 	// log.Println(tube.AwaitingClients.Size())
-	delayedJob := tube.Delayed.Peek()
-	if delayedJob != nil && delayedJob.Key() <= 0 {
+	counter := 0
+	for delayedJob := tube.Delayed.Peek();
+			delayedJob != nil && delayedJob.Key() <= 0;
+			delayedJob = tube.Delayed.Peek(){
 		// log.Println("QUEUE delayed job got ready: ", delayedJob)
 		delayedJob = tube.Delayed.Dequeue()
 		delayedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(delayedJob)
+		if counter > MAX_JOBS_PER_ITERATION {
+			break;
+		} else {
+			counter++
+		}
 	}
+	counter = 0
 	// reserved jobs are put to ready
-	reservedJob := tube.Reserved.Peek()
-	if reservedJob != nil && reservedJob.Key() <= 0 {
+	for reservedJob := tube.Reserved.Peek();
+			tube.Reserved.Peek() != nil && reservedJob.Key() <= 0;
+			reservedJob = tube.Reserved.Peek() {
 		// log.Println("QUEUE found reserved job thats ready: ", reservedJob)
 		reservedJob = tube.Reserved.Dequeue()
 		reservedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(reservedJob)
+		if counter > MAX_JOBS_PER_ITERATION {
+			break;
+		} else {
+			counter++
+		}
 	}
+	counter = 0
 	// ready jobs are sent
-	if tube.AwaitingClients.Peek() != nil && tube.Ready.Peek() != nil {
+	for tube.AwaitingClients.Peek() != nil && tube.Ready.Peek() != nil {
 		//log.Println("*********************************************************************")
 		availableClientConnection := tube.AwaitingClients.Dequeue()
 		readyJob := tube.Ready.Dequeue().(*Job)
@@ -70,5 +86,10 @@ func (tube *Tube) Process() {
 		client.SendChannel <- client.Request
 		readyJob.SetState(RESERVED)
 		tube.Reserved.Enqueue(readyJob)
+		if counter > MAX_JOBS_PER_ITERATION {
+			break;
+		} else {
+			counter++
+		}
 	}
 }
