@@ -104,7 +104,7 @@ func initLogging() {
 
 	// Only errors and more severe messages should be sent to backend1
 	backend1Leveled := logging.AddModuleLevel(backend2Formatter)
-	backend1Leveled.SetLevel(logging.DEBUG, "")
+	backend1Leveled.SetLevel(logging.INFO, "")
 
 	// Set the backends to be used.
 	logging.SetBackend(backend1Leveled)

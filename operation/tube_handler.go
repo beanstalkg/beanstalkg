@@ -40,11 +40,11 @@ func NewTubeHandler(
 					c.Params["id"] = c.Job.Id()
 					commands <- c.Copy()
 				case architecture.RESERVE:
-					sendChan := make(chan architecture.Command)
+					sendChan := make(chan architecture.Command, 1)
 					watchedTubeConnectionsReceiver <- sendChan
 					tube.AwaitingClients.Enqueue(architecture.NewAwaitingClient(c, sendChan))
 				case architecture.RESERVE_WITH_TIMEOUT:
-					sendChan := make(chan architecture.Command)
+					sendChan := make(chan architecture.Command, 1)
 					watchedTubeConnectionsReceiver <- sendChan
 					client := architecture.NewAwaitingClient(c, sendChan)
 					tube.AwaitingClients.Enqueue(client)

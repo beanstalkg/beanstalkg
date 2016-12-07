@@ -8,7 +8,7 @@ import (
 
 var log = logging.MustGetLogger("BEANSTALKG")
 
-const QUEUE_FREQUENCY time.Duration = 1  * time.Second // process every 20ms. TODO check why some clients get stuck when this is lower
+const QUEUE_FREQUENCY time.Duration = 20  * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
 const MAX_JOBS_PER_ITERATION int = 20
 
 type PriorityQueue interface {
@@ -48,7 +48,7 @@ type Tube struct {
 // Process runs all the necessary operations for upkeep of the tube
 // TODO unit test
 func (tube *Tube) Process() {
-	log.Debug(tube.AwaitingClients)
+	// log.Debug(tube.AwaitingClients)
 	counter := 0
 	for delayedJob := tube.Delayed.Peek();
 			delayedJob != nil && delayedJob.Key() <= 0;

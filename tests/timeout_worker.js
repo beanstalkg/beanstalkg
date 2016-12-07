@@ -28,12 +28,14 @@ client.connect();
 
     function doit(client) {
         return co(function* () {
-             var res = yield client.reserve_with_timeoutAsync(10);
+             var res = yield client.reserve_with_timeoutAsync(20);
              console.log(res[1].toString());
              var ob = JSON.parse(res[1].toString());
              ob.number = ob.number + 1;
              yield client.destroyAsync(res[0]);
-             client.putAsync(1, ob.number, 5, JSON.stringify(ob));
+             client.putAsync(1, 5, 5, JSON.stringify(ob));
              setTimeout(function() {doit(client)}, 1);
-        });
+        }).catch(function(e) {
+                          console.log(e);
+                      });;
     }
