@@ -7,29 +7,29 @@ import (
 	"net"
 	"reflect"
 	"strconv"
-	"github.com/op/go-logging"
+	// "github.com/op/go-logging"
 	"github.com/satori/go.uuid"
 )
 
-var log = logging.MustGetLogger("BEANSTALKG")
+// var log = logging.MustGetLogger("BEANSTALKG")
 
 type clientHandler struct {
 	id			       string
 	conn                           net.Conn
-	registerConnection             chan architecture.Command
-	tubeConnectionReceiver         chan chan architecture.Command
-	usedTubeConnection             chan architecture.Command
-	watchedTubeConnectionsReceiver chan chan architecture.Command
-	watchedTubeConnections         map[string]chan architecture.Command
+	registerConnection             chan *architecture.Command
+	tubeConnectionReceiver         chan chan *architecture.Command
+	usedTubeConnection             chan *architecture.Command
+	watchedTubeConnectionsReceiver chan chan *architecture.Command
+	watchedTubeConnections         map[string]chan *architecture.Command
 	reservedJobs                   map[string]string
 	stop                           chan bool
 }
 
 func NewClientHandler(
 	conn net.Conn,
-	registerConnection chan architecture.Command,
-	useTubeConnectionReceiver chan chan architecture.Command,
-	watchedTubeConnectionsReceiver chan chan architecture.Command,
+	registerConnection chan *architecture.Command,
+	useTubeConnectionReceiver chan chan *architecture.Command,
+	watchedTubeConnectionsReceiver chan chan *architecture.Command,
 	stop chan bool,
 ) {
 	go func() {
@@ -45,8 +45,9 @@ func NewClientHandler(
 			map[string]string{},
 			stop,
 		}
+		// log.Info("CLIENT_HANDLER start ", client.id)
 		client.startSession()
-		log.Debug("CLIENT_HANDLER exit ", client.id)
+		// log.Info("CLIENT_HANDLER exit ", client.id)
 		return
 	}()
 }
@@ -56,7 +57,7 @@ func (client *clientHandler) handleReply(c architecture.Command) error {
 		more, reply := c.Reply()
 		_, err := client.conn.Write([]byte(reply + "\r\n"))
 		if err != nil {
-			log.Error(err)
+			// log.Error(err)
 			return err
 		}
 		if !more {
@@ -70,9 +71,10 @@ func (client *clientHandler) startSession() {
 	// this command object will be replaced each time the client sends a new one
 	c := architecture.NewDefaultCommand()
 	// selects default tube first up
-	client.registerConnection <- c.Copy()
+	cCopy := c.Copy()
+	client.registerConnection <- &cCopy
 	client.usedTubeConnection = <-client.tubeConnectionReceiver
-	client.watchedTubeConnections = map[string]chan architecture.Command{
+	client.watchedTubeConnections = map[string]chan *architecture.Command{
 		"default": client.usedTubeConnection,
 	}
 	// convert scan to a selectable
@@ -83,6 +85,7 @@ func (client *clientHandler) startSession() {
 		for scanner.Scan() {
 			scan <- scanner.Text()
 		}
+		// log.Info("******** DROPPED **** ", client.id)
 		exit <- true
 	}()
 
@@ -107,25 +110,28 @@ func (client *clientHandler) startSession() {
 				c = architecture.NewCommand()
 			}
 		case <-client.stop:
+			client.close()
 			return
 		case <-exit:
+			client.close()
 			return
 		}
 	}
 }
 
 func (client *clientHandler) handleBasicCommand(command architecture.Command) architecture.Command {
-	log.Debug("CLIENT_HANDLER handling command ", command.Params["client_id"], command)
+	// log.Debug("CLIENT_HANDLER handling command ", command.Params["client_id"], command)
+	cCopy := command.Copy()
 	switch command.Name {
 	case architecture.USE:
 		// send command to tube register
-		client.registerConnection <- command.Copy()
+		client.registerConnection <- &cCopy
 		client.usedTubeConnection = <-client.tubeConnectionReceiver
 	case architecture.PUT:
-		client.usedTubeConnection <- command.Copy() // send the command to tube
-		command = <-client.usedTubeConnection       // get the response
+		client.usedTubeConnection <- &cCopy // send the command to tube
+		command = *(<-client.usedTubeConnection)       // get the response
 	case architecture.WATCH:
-		client.registerConnection <- command.Copy()
+		client.registerConnection <- &cCopy
 		client.watchedTubeConnections[command.Params["tube"]] = <-client.tubeConnectionReceiver
 		command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
 	case architecture.IGNORE:
@@ -142,8 +148,8 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 	case architecture.DELETE:
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
-				con <- command.Copy()
-				command = <-con
+				con <- &cCopy
+				command = *(<-con)
 			}
 		} else {
 			command.Err = errors.New(architecture.NOT_FOUND)
@@ -151,8 +157,8 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 	case architecture.RELEASE:
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
-				con <- command
-				command = <-con
+				con <- &cCopy
+				command = *(<-con)
 			}
 		} else {
 			command.Err = errors.New(architecture.NOT_FOUND)
@@ -160,8 +166,8 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 	case architecture.BURY:
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
-				con <- command.Copy()
-				command = <-con
+				con <- &cCopy
+				command = *(<-con)
 			}
 		} else {
 			command.Err = errors.New(architecture.NOT_FOUND)
@@ -173,14 +179,13 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 }
 
 func (client *clientHandler) reserve(command architecture.Command) architecture.Command {
-	recv := make(chan architecture.Command)
-	c := command.Copy()
+	recv := make(chan *architecture.Command)
 	go func() {
 		// iterate and create a list of watched connections to receive from
-		receiveConnections := []chan architecture.Command{}
+		receiveConnections := []chan *architecture.Command{}
 		receiveConnectionNames := []string{}
 		for name, connection := range client.watchedTubeConnections {
-			connection <- c
+			connection <- &command
 			receiveConnections = append(receiveConnections, <-client.watchedTubeConnectionsReceiver)
 			receiveConnectionNames = append(receiveConnectionNames, name)
 		}
@@ -189,20 +194,27 @@ func (client *clientHandler) reserve(command architecture.Command) architecture.
 		for i, ch := range receiveConnections {
 			cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
 		}
-		log.Debug("CLIENT_HANDLER waiting on reserve client_id: ", c.Params["client_id"])
+		// log.Debug("CLIENT_HANDLER waiting on reserve client_id: ", c.Params["client_id"])
 		chosen, value, _ := reflect.Select(cases)
-		resultCommand := value.Interface().(architecture.Command)
+		resultCommand := value.Interface().(*architecture.Command)
 		resultCommand.Params["tube"] = receiveConnectionNames[chosen]
-		log.Debug("CLIENT_HANDLER selected on reserve client_id: ", c.Params["client_id"], resultCommand)
-		recv <- resultCommand.Copy()
-		log.Debug("CLIENT_HANDLER sent reserved client_id: ", c.Params["client_id"], resultCommand)
+		// log.Debug("CLIENT_HANDLER selected on reserve client_id: ", c.Params["client_id"], resultCommand)
+		recv <- resultCommand
+		// log.Debug("CLIENT_HANDLER sent reserved client_id: ", c.Params["client_id"], resultCommand)
 		return
 	}()
-	log.Debug("CLIENT_HANDLER **waiting on receive reserved client_id: ", c.Params["client_id"])
-	command = <-recv
+	// log.Debug("CLIENT_HANDLER **waiting on receive reserved client_id: ", command.Params["client_id"])
+	newCommand := <-recv
 	close(recv)
-	if command.Err == nil {
-		client.reservedJobs[command.Job.Id()] = command.Params["tube"]
+	if (*newCommand).Err == nil {
+		client.reservedJobs[(*newCommand).Job.Id()] = (*newCommand).Params["tube"]
 	}
-	return command
+	return *newCommand
+}
+
+func (client *clientHandler) close() {
+	for _, connection := range client.watchedTubeConnections {
+		c := architecture.Command{Name:architecture.INTERNAL_CLOSE_CLIENT, Params:map[string]string{"client_id": client.id}}
+		connection <- &c
+	}
 }

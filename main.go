@@ -6,10 +6,11 @@ import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"github.com/vimukthi-git/beanstalkg/operation"
 	"net"
-	"net/http"
-	"github.com/op/go-logging"
+	// "github.com/op/go-logging"
 	_ "net/http/pprof"
 	"os"
+	"net/http"
+	"github.com/op/go-logging"
 )
 
 func main() {
@@ -17,7 +18,8 @@ func main() {
 	go func() {
 		// https://golang.org/pkg/net/http/pprof/
 		// http://localhost:6060/debug/pprof/goroutine?debug=2
-		log.Info(http.ListenAndServe("localhost:6060", nil))
+		// log.Info(http.ListenAndServe("localhost:6060", nil))
+		http.ListenAndServe("localhost:6060", nil)
 	}()
 	port := flag.String("port", "11300", "Port for beanstalkg server")
 	proxy_mode := flag.Bool("proxy_mode", false, "Start server in proxy mode")
@@ -31,12 +33,12 @@ func main() {
 	stop := make(chan bool)
 
 	if !*proxy_mode {
-		tubeRegister := make(chan architecture.Command)
+		tubeRegister := make(chan *architecture.Command, 1000)
 		// use this tube to send the channels for each individual tube to the clients when the do 'use' command
-		useTubeConnectionReceiver := make(chan chan architecture.Command)
-		watchedTubeConnectionsReceiver := make(chan chan architecture.Command)
+		useTubeConnectionReceiver := make(chan chan *architecture.Command, 1000)
+		watchedTubeConnectionsReceiver := make(chan chan *architecture.Command, 1000)
 		operation.NewTubeRegister(tubeRegister, useTubeConnectionReceiver, watchedTubeConnectionsReceiver, stop)
-		log.Info("BEANSTALKG listening on: ", *port)
+		// log.Info("BEANSTALKG listening on: ", *port)
 
 		for {
 			// log.Println("BEANSTALKG Waiting..")
@@ -48,7 +50,7 @@ func main() {
 		}
 	} else {
 		config := getConfig(*env)
-		log.Info("BEANSTALKG started in proxy mode, now listening on: ", *port)
+		// log.Info("BEANSTALKG started in proxy mode, now listening on: ", *port)
 		for {
 			// log.Println("BEANSTALKG Waiting..")
 			conn, err := listener.Accept()
@@ -63,7 +65,7 @@ func main() {
 
 func checkError(err error) {
 	if err != nil {
-		log.Fatal("Fatal error:", err.Error())
+		// log.Fatal("Fatal error:", err.Error())
 	}
 }
 
@@ -77,7 +79,7 @@ func getConfig(env string) Configuration {
 	configuration := make(map[string]Configuration)
 	err := decoder.Decode(&configuration)
 	if err != nil {
-		log.Fatal("error in parsing config:", err)
+		// log.Fatal("error in parsing config:", err)
 	}
 	envConf, ok := configuration[env]
 	if !ok {

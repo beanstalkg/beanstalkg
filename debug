@@ -157,3 +157,7 @@ created by github.com/vimukthi-git/beanstalkg/operation.NewTubeHandler
 exit status 2
 
 ===================
+
+
+go tool pprof -runtime -alloc_space -base mem4.prof beanstalkg mem6.prof
+go tool pprof -runtime -alloc_objects beanstalkg mem2.prof -alloc_space

@@ -33,7 +33,7 @@ client.connect();
              var ob = JSON.parse(res[1].toString());
              ob.number = ob.number + 1;
              yield client.destroyAsync(res[0]);
-             client.putAsync(1, 5, 5, JSON.stringify(ob));
+             client.putAsync(1, 0, 5, JSON.stringify(ob));
              setTimeout(function() {doit(client)}, 1);
         });
     }

@@ -10,8 +10,8 @@ import (
 
 func NewTubeHandler(
 	name string,
-	commands chan architecture.Command,
-	watchedTubeConnectionsReceiver chan chan architecture.Command,
+	commands chan *architecture.Command,
+	watchedTubeConnectionsReceiver chan chan *architecture.Command,
 	stop chan bool,
 ) {
 	// commands := make(chan architecture.Command)
@@ -26,28 +26,32 @@ func NewTubeHandler(
 				tube.Process()
 				tube.ProcessTimedClients()
 			case c := <-commands:
-				log.Debug("TUBE_HANDLER received: ", c)
+				// log.Debug("TUBE_HANDLER received: ", c)
 				switch c.Name {
 				case architecture.PUT:
 					if c.Job.State() == architecture.READY {
 						// log.Println("TUBE_HANDLER put job to ready queue: ", c, name)
-						tube.Ready.Enqueue(&c.Job)
+						v := architecture.PriorityQueueItem(&c.Job)
+						tube.Ready.Enqueue(&v)
 					} else {
 						// log.Println("TUBE_HANDLER put job to delayed queue: ", c, name)
-						tube.Delayed.Enqueue(&c.Job)
+						v := architecture.PriorityQueueItem(&c.Job)
+						tube.Delayed.Enqueue(&v)
 					}
 					c.Err = nil
 					c.Params["id"] = c.Job.Id()
-					commands <- c.Copy()
+					commands <- c
 				case architecture.RESERVE:
-					sendChan := make(chan architecture.Command, 1)
+					sendChan := make(chan *architecture.Command, 1)
 					watchedTubeConnectionsReceiver <- sendChan
-					tube.AwaitingClients.Enqueue(architecture.NewAwaitingClient(c, sendChan))
+					v := architecture.PriorityQueueItem(architecture.NewAwaitingClient(c.Params["client_id"], *c, sendChan))
+					tube.AwaitingClients.Enqueue(&v)
 				case architecture.RESERVE_WITH_TIMEOUT:
-					sendChan := make(chan architecture.Command, 1)
+					sendChan := make(chan *architecture.Command, 1)
 					watchedTubeConnectionsReceiver <- sendChan
-					client := architecture.NewAwaitingClient(c, sendChan)
-					tube.AwaitingClients.Enqueue(client)
+					client := architecture.NewAwaitingClient(c.Params["client_id"], *c, sendChan)
+					v := architecture.PriorityQueueItem(client)
+					tube.AwaitingClients.Enqueue(&v)
 					tube.AwaitingTimedClients[client.Id()] = client
 					tube.ProcessTimedClients()
 				case architecture.DELETE:
@@ -57,29 +61,40 @@ func NewTubeHandler(
 					} else {
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
-					commands <- c.Copy()
+					commands <- c
 				case architecture.RELEASE:
 					item := tube.Reserved.Delete(c.Params["id"])
 					if item != nil {
 						job := item.(*architecture.Job)
 						// log.Println("TUBE_HANDLER released job: ", c, name)
 						job.SetState(architecture.READY)
-						tube.Ready.Enqueue(job)
+						v := architecture.PriorityQueueItem(job)
+						tube.Ready.Enqueue(&v)
 					} else {
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
-					commands <- c.Copy()
+					commands <- c
 				case architecture.BURY:
 					item := tube.Reserved.Delete(c.Params["id"])
 					if item != nil {
 						job := item.(*architecture.Job)
 						// log.Println("TUBE_HANDLER buried job: ", c, name)
 						job.SetState(architecture.BURIED)
-						tube.Buried.Enqueue(job)
+						v := architecture.PriorityQueueItem(job)
+						tube.Buried.Enqueue(&v)
 					} else {
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
-					commands <- c.Copy()
+					commands <- c
+				case architecture.INTERNAL_CLOSE_CLIENT:
+					item := tube.AwaitingClients.Find(c.Params["client_id"])
+					// log.Info("TUBE_HANDLER close ", c.Params["client_id"])
+					if item != nil {
+						client := item.(*architecture.AwaitingClient)
+						close(client.SendChannel)
+					}
+					tube.AwaitingClients.Delete(c.Params["client_id"])
+					delete(tube.AwaitingTimedClients, c.Params["client_id"])
 				}
 			case <-stop:
 				ticker.Stop()

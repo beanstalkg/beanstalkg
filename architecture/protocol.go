@@ -24,6 +24,7 @@ const (
 	RELEASE                          = "release"
 	BURY                             = "bury"
 	TOUCH                            = "touch"
+	INTERNAL_CLOSE_CLIENT            = "close-client"
 )
 
 const (

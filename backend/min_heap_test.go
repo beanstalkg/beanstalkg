@@ -40,12 +40,14 @@ DELETE 4
 */
 func TestMinHeap_Insert(t *testing.T) {
 	m := MinHeap{}
-	m.Enqueue(testHeapItem{4, string(1), time.Now().UnixNano()})
+	v := architecture.PriorityQueueItem(testHeapItem{4, string(1), time.Now().UnixNano()})
+	m.Enqueue(&v)
 	fmt.Println(m.Min().Key())
 	if m.Min().Key() != 4 {
 		t.Fail()
 	}
-	m.Enqueue(testHeapItem{9, string(2), time.Now().UnixNano()})
+	v2 := architecture.PriorityQueueItem(testHeapItem{9, string(2), time.Now().UnixNano()})
+	m.Enqueue(&v2)
 	fmt.Println(m.Min())
 	if m.Min().Key() != 4 {
 		t.Fail()
@@ -64,10 +66,14 @@ func TestMinHeap_Insert(t *testing.T) {
 
 func TestMinHeap_InsertCheckDelete(t *testing.T) {
 	m := MinHeap{}
-	m.Enqueue(testHeapItem{1, "one", time.Now().UnixNano()})
-	m.Enqueue(testHeapItem{1, "two", time.Now().UnixNano()})
-	m.Enqueue(testHeapItem{1, "three", time.Now().UnixNano()})
-	m.Enqueue(testHeapItem{1, "four", time.Now().UnixNano()})
+	v1 := architecture.PriorityQueueItem(testHeapItem{1, "one", time.Now().UnixNano()})
+	m.Enqueue(&v1)
+	v2 := architecture.PriorityQueueItem(testHeapItem{1, "two", time.Now().UnixNano()})
+	m.Enqueue(&v2)
+	v3 := architecture.PriorityQueueItem(testHeapItem{1, "three", time.Now().UnixNano()})
+	m.Enqueue(&v3)
+	v4 := architecture.PriorityQueueItem(testHeapItem{1, "four", time.Now().UnixNano()})
+	m.Enqueue(&v4)
 	fmt.Println(m)
 	item := m.Dequeue().(testHeapItem)
 	if item.Id() != "one" {
@@ -92,7 +98,8 @@ func TestMinHeap_InsertCheckDelete(t *testing.T) {
 	if m.Dequeue() != nil {
 		t.Fail()
 	}
-	m.Enqueue(testHeapItem{1, "one", time.Now().UnixNano()})
+	v5 := architecture.PriorityQueueItem(testHeapItem{1, "one", time.Now().UnixNano()})
+	m.Enqueue(&v5)
 	item = m.Dequeue().(testHeapItem)
 	if item.Id() != "one" {
 		t.Fail()
@@ -105,7 +112,8 @@ func TestIntegration(t *testing.T) {
 	tube := architecture.Tube{"test", &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, make(map[string]*architecture.AwaitingClient)}
 	//m.Enqueue(testHeapItem{4, string(1)})
 	fmt.Println(tube)
-	tube.Delayed.Enqueue(testHeapItem{4, string(1), time.Now().UnixNano()})
+	v := architecture.PriorityQueueItem(testHeapItem{4, string(1), time.Now().UnixNano()})
+	tube.Delayed.Enqueue(&v)
 	if tube.Delayed.Dequeue().Key() != 4 {
 		t.Fail()
 	}

@@ -3,18 +3,18 @@ package architecture
 import (
 	"time"
 	"errors"
-	"github.com/op/go-logging"
+	// "github.com/op/go-logging"
 )
 
-var log = logging.MustGetLogger("BEANSTALKG")
+// var log = logging.MustGetLogger("BEANSTALKG")
 
 const QUEUE_FREQUENCY time.Duration = 20  * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
-const MAX_JOBS_PER_ITERATION int = 20
+const MAX_JOBS_PER_ITERATION int = 1000000
 
 type PriorityQueue interface {
 	Init()
 	// queue item
-	Enqueue(item PriorityQueueItem)
+	Enqueue(item *PriorityQueueItem)
 	// get the highest priority item without removing
 	Peek() (item PriorityQueueItem)
 	// remove item from begining
@@ -53,10 +53,10 @@ func (tube *Tube) Process() {
 	for delayedJob := tube.Delayed.Peek();
 			delayedJob != nil && delayedJob.Key() <= 0;
 			delayedJob = tube.Delayed.Peek(){
-		log.Debug("QUEUE delayed job got ready: ", delayedJob)
+		// log.Debug("QUEUE delayed job got ready: ", delayedJob)
 		delayedJob = tube.Delayed.Dequeue()
 		delayedJob.(*Job).SetState(READY)
-		tube.Ready.Enqueue(delayedJob)
+		tube.Ready.Enqueue(&delayedJob)
 		if counter > MAX_JOBS_PER_ITERATION {
 			break;
 		} else {
@@ -68,10 +68,10 @@ func (tube *Tube) Process() {
 	for reservedJob := tube.Reserved.Peek();
 			tube.Reserved.Peek() != nil && reservedJob.Key() <= 0;
 			reservedJob = tube.Reserved.Peek() {
-		log.Debug("QUEUE found reserved job thats ready: ", reservedJob)
+		// log.Debug("QUEUE found reserved job thats ready: ", reservedJob)
 		reservedJob = tube.Reserved.Dequeue()
 		reservedJob.(*Job).SetState(READY)
-		tube.Ready.Enqueue(reservedJob)
+		tube.Ready.Enqueue(&reservedJob)
 		if counter > MAX_JOBS_PER_ITERATION {
 			break;
 		} else {
@@ -83,12 +83,14 @@ func (tube *Tube) Process() {
 	for tube.AwaitingClients.Peek() != nil && tube.Ready.Peek() != nil {
 		availableClientConnection := tube.AwaitingClients.Dequeue()
 		client := availableClientConnection.(*AwaitingClient)
-		log.Debug("QUEUE sending job to client: ", client.id)
+		// log.Debug("QUEUE sending job to client: ", client.id)
 		readyJob := tube.Ready.Dequeue().(*Job)
 		client.Request.Job = *readyJob
-		client.SendChannel <- client.Request.Copy()
+		cCopy := client.Request.Copy()
+		client.SendChannel <- &cCopy
 		readyJob.SetState(RESERVED)
-		tube.Reserved.Enqueue(readyJob)
+		v := PriorityQueueItem(readyJob)
+		tube.Reserved.Enqueue(&v)
 		if counter > MAX_JOBS_PER_ITERATION {
 			break;
 		} else {
@@ -99,25 +101,28 @@ func (tube *Tube) Process() {
 
 // ProcessTimedClients reserves jobs for or times out the clients with a timeout
 func (tube *Tube) ProcessTimedClients() {
-	log.Debug("QUEUE START TIMED", tube.AwaitingTimedClients)
+	// log.Debug("QUEUE START TIMED", tube.AwaitingTimedClients)
 	for id, client := range tube.AwaitingTimedClients {
 		if client.Timeleft() <= 0 {
 			if tube.Ready.Peek() != nil {
 				readyJob := tube.Ready.Dequeue().(*Job)
 				client.Request.Job = *readyJob
-				log.Debug("QUEUE IF ", client.Request)
-				client.SendChannel <- client.Request.Copy()
+				// log.Debug("QUEUE IF ", client.Request)
+				cCopy := client.Request.Copy()
+				client.SendChannel <- &cCopy
 				readyJob.SetState(RESERVED)
-				tube.Reserved.Enqueue(readyJob)
+				v := PriorityQueueItem(readyJob)
+				tube.Reserved.Enqueue(&v)
 			} else {
 				client.Request.Err = errors.New(TIMED_OUT)
-				log.Debug("QUEUE ELSE ", client.Request)
-				client.SendChannel <- client.Request.Copy()
+				// log.Debug("QUEUE ELSE ", client.Request)
+				cCopy := client.Request.Copy()
+				client.SendChannel <- &cCopy
 			}
 			delete(tube.AwaitingTimedClients, id)
 			tube.AwaitingClients.Delete(id)
 		}
-		log.Debug("QUEUE ", tube.AwaitingTimedClients)
+		// log.Debug("QUEUE ", tube.AwaitingTimedClients)
 	}
-	log.Debug("QUEUE END TIMED", tube.AwaitingTimedClients)
+	// log.Debug("QUEUE END TIMED", tube.AwaitingTimedClients)
 }

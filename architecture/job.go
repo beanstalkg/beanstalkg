@@ -2,7 +2,6 @@ package architecture
 
 import (
 	"errors"
-	"github.com/satori/go.uuid"
 	"time"
 	"strconv"
 )
@@ -146,15 +145,15 @@ func (j *Job) Dequeued() {
 // AwaitingClient stores an awaiting client send channel for a tube
 type AwaitingClient struct {
 	id          string
-	SendChannel chan Command
+	SendChannel chan *Command
 	Request     Command
 	QueuedAt    int64
 	Timeout	    int64
 }
 
-func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClient {
+func NewAwaitingClient(id string, request Command, sendChannel chan *Command) *AwaitingClient {
 	a := new(AwaitingClient)
-	a.id = uuid.NewV1().String()
+	a.id = id
 	a.Request = request
 	a.SendChannel = sendChannel
 	a.QueuedAt = time.Now().UnixNano()
@@ -164,7 +163,7 @@ func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClien
 		if err == nil {
 			a.Timeout = timeout * NANO // convert to nano seconds
 		} else {
-			log.Error(err)
+			// log.Error(err)
 		}
 	}
 	// log.Println(a)

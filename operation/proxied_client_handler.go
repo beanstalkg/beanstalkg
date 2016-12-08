@@ -34,7 +34,7 @@ func NewProxiedClientHandler(
 			error:          errorChannel,
 		}
 		client.startSession()
-		log.Info("PROXIED_CLIENT_HANDLER exit")
+		// log.Info("PROXIED_CLIENT_HANDLER exit")
 		return
 	}()
 }
@@ -59,7 +59,7 @@ func (client *clientProxiedHandler) startSession() {
 	for {
 		select {
 		case rawCommand := <-scan:
-			log.Info("PROXIED_CLIENT_HANDLER", rawCommand)
+			// log.Info("PROXIED_CLIENT_HANDLER", rawCommand)
 			serverCount := 0
 			for _, proxyHandler := range client.proxiedServers {
 				proxyHandler <- rawCommand
@@ -79,13 +79,13 @@ func (client *clientProxiedHandler) startSession() {
 			}
 			_, err := client.conn.Write([]byte(chosenReply + "\r\n"))
 			if err != nil {
-				log.Error(err)
+				// log.Error(err)
 				return
 			}
 		case <-client.stop:
 			return
 		case id := <-client.error:
-			log.Info("PROXIED_CLIENT_HANDLER error from: ", id, len(client.proxiedServers))
+			// log.Info("PROXIED_CLIENT_HANDLER error from: ", id, len(client.proxiedServers))
 			client.proxiedServers[id] = client.proxiedServers[len(client.proxiedServers)-1] // Replace id with the last one.
 			client.proxiedServers = client.proxiedServers[:len(client.proxiedServers)-1]    // Chop off the last one.
 		case <-exit:
@@ -99,14 +99,14 @@ func createProxyServerHandler(id int, url string, stop chan bool, error chan int
 	go func() {
 		rAddr, err := net.ResolveTCPAddr("tcp4", url)
 		if err != nil {
-			log.Error(err)
+			// log.Error(err)
 			error <- id
 			return
 		}
 
 		rConn, err := net.DialTCP("tcp", nil, rAddr)
 		if err != nil {
-			log.Error(err)
+			// log.Error(err)
 			error <- id
 			return
 		}
@@ -126,7 +126,7 @@ func createProxyServerHandler(id int, url string, stop chan bool, error chan int
 			case command := <-com:
 				_, err := rConn.Write([]byte(command + "\r\n"))
 				if err != nil {
-					log.Error(err)
+					// log.Error(err)
 					error <- id
 					return
 				}
