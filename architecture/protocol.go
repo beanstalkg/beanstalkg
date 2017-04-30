@@ -126,7 +126,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 		// first round
 		parts := strings.Split(rawCommand, " ")
 		switch strings.ToLower(parts[0]) {
-		case "use":
+		case USE:
 			// use <tube>\r\n
 			command.Name = USE
 			if len(parts) > 2 {
@@ -139,7 +139,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			}
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
-		case "put":
+		case PUT:
 			// put <pri> <delay> <ttr> <bytes>\r\n <data>\r\n
 			command.Name = PUT
 			if len(parts) != 5 {
@@ -155,7 +155,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			}
 			command.WaitingForMore = true
 			return !command.WaitingForMore, nil
-		case "watch":
+		case WATCH:
 			// watch <tube>\r\n
 			command.Name = WATCH
 			if len(parts) != 2 {
@@ -168,7 +168,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			}
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
-		case "ignore":
+		case IGNORE:
 			// ignore <tube>\r\n
 			command.Name = IGNORE
 			if len(parts) != 2 {
@@ -181,7 +181,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			}
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
-		case "reserve":
+		case RESERVE:
 			// reserve\r\n
 			command.Name = RESERVE
 			if len(parts) != 1 {
@@ -191,7 +191,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
-		case "reserve-with-timeout":
+		case RESERVE_WITH_TIMEOUT:
 			// reserve-with-timeout <seconds>\r\n
 			command.Name = RESERVE_WITH_TIMEOUT
 			if len(parts) != 2 {
@@ -204,7 +204,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
-		case "delete":
+		case DELETE:
 			// delete <id>\r\n
 			command.Name = DELETE
 			if len(parts) != 2 {
@@ -217,7 +217,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
-		case "release":
+		case RELEASE:
 			// release <id> <pri> <delay>\r\n
 			command.Name = RELEASE
 			if len(parts) != 4 {
@@ -232,7 +232,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
-		case "bury":
+		case BURY:
 			// bury <id> <pri>\r\n
 			command.Name = BURY
 			if len(parts) != 3 {
@@ -246,7 +246,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			command.RawCommand = rawCommand
 			command.WaitingForMore = false
 			return !command.WaitingForMore, nil
-		case "touch":
+		case TOUCH:
 			// touch <id>\r\n
 			command.Name = TOUCH
 			if len(parts) != 2 {
