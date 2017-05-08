@@ -3,8 +3,9 @@ package architecture
 import (
 	"errors"
 	"fmt"
-	"github.com/satori/go.uuid"
 	"strings"
+
+	"github.com/satori/go.uuid"
 	// "log"
 	"strconv"
 )
@@ -125,158 +126,46 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 	if !command.WaitingForMore {
 		// first round
 		parts := strings.Split(rawCommand, " ")
-		switch strings.ToLower(parts[0]) {
-		case string(USE):
-			// use <tube>\r\n
-			command.Name = USE
-			if len(parts) > 2 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.RawCommand = rawCommand
-			command.Params = map[string]string{
-				"tube": parts[1],
-			}
-			command.WaitingForMore = false
-			return !command.WaitingForMore, nil
-		case string(PUT):
-			// put <pri> <delay> <ttr> <bytes>\r\n <data>\r\n
-			command.Name = PUT
-			if len(parts) != 5 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.RawCommand = rawCommand
-			command.Params = map[string]string{
-				"pri":   parts[1],
-				"delay": parts[2],
-				"ttr":   parts[3],
-				"bytes": parts[4],
-			}
-			command.WaitingForMore = true
-			return !command.WaitingForMore, nil
-		case string(WATCH):
-			// watch <tube>\r\n
-			command.Name = WATCH
-			if len(parts) != 2 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.RawCommand = rawCommand
-			command.Params = map[string]string{
-				"tube": parts[1],
-			}
-			command.WaitingForMore = false
-			return !command.WaitingForMore, nil
-		case string(IGNORE):
-			// ignore <tube>\r\n
-			command.Name = IGNORE
-			if len(parts) != 2 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.RawCommand = rawCommand
-			command.Params = map[string]string{
-				"tube": parts[1],
-			}
-			command.WaitingForMore = false
-			return !command.WaitingForMore, nil
-		case string(RESERVE):
-			// reserve\r\n
-			command.Name = RESERVE
-			if len(parts) != 1 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.RawCommand = rawCommand
-			command.WaitingForMore = false
-			return !command.WaitingForMore, nil
-		case string(RESERVE_WITH_TIMEOUT):
-			// reserve-with-timeout <seconds>\r\n
-			command.Name = RESERVE_WITH_TIMEOUT
-			if len(parts) != 2 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.Params = map[string]string{
-				"timeout": parts[1],
-			}
-			command.RawCommand = rawCommand
-			command.WaitingForMore = false
-			return !command.WaitingForMore, nil
-		case string(DELETE):
-			// delete <id>\r\n
-			command.Name = DELETE
-			if len(parts) != 2 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.Params = map[string]string{
-				"id": parts[1],
-			}
-			command.RawCommand = rawCommand
-			command.WaitingForMore = false
-			return !command.WaitingForMore, nil
-		case string(RELEASE):
-			// release <id> <pri> <delay>\r\n
-			command.Name = RELEASE
-			if len(parts) != 4 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.Params = map[string]string{
-				"id":    parts[1],
-				"pri":   parts[2],
-				"delay": parts[3],
-			}
-			command.RawCommand = rawCommand
-			command.WaitingForMore = false
-			return !command.WaitingForMore, nil
-		case string(BURY):
-			// bury <id> <pri>\r\n
-			command.Name = BURY
-			if len(parts) != 3 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.Params = map[string]string{
-				"id":  parts[1],
-				"pri": parts[2],
-			}
-			command.RawCommand = rawCommand
-			command.WaitingForMore = false
-			return !command.WaitingForMore, nil
-		case string(TOUCH):
-			// touch <id>\r\n
-			command.Name = TOUCH
-			if len(parts) != 2 {
-				command.Err = errors.New(BAD_FORMAT)
-				return true, command.Err
-			}
-			command.Params = map[string]string{
-				"id": parts[1],
-			}
-			command.RawCommand = rawCommand
-			command.WaitingForMore = false
-			return !command.WaitingForMore, nil
-		default:
+		name := CommandName(strings.ToLower(parts[0]))
+
+		// Check for valid command.
+		opts, ok := cmdParseOptions[name]
+		if !ok {
+			// Unknown command.
 			command.Err = errors.New(UNKNOWN_COMMAND)
 			return true, command.Err
 		}
-	} else {
-		// second round
-		// log.Println("GOT MORE", command)
-		switch command.Name {
-		case PUT:
 
-			command.Params["data"] = rawCommand
-			command.RawCommand += ("\r\n" + rawCommand)
-			err := command.createJobFromParams()
-			// log.Println("GOT MORE PUT", c, err)
-			command.Err = err
-			return true, err
+		command.Name = name
+
+		// Were we given the proper number of parameters?
+		if len(parts) != opts.ExpectedLength {
+			command.Err = errors.New(BAD_FORMAT)
+			return true, command.Err
 		}
+
+		// Store command info.  For future logging, maybe?
+		command.RawCommand = rawCommand
+		for i, paramName := range opts.Params {
+			command.Params[paramName] = parts[i+1]
+		}
+		command.WaitingForMore = opts.WaitingForMore
+
+		return !command.WaitingForMore, nil
 	}
+
+	// second round; PUT is the only valid command when WaitingForMore.
+	// log.Println("GOT MORE", command)
+	if command.Name == PUT {
+		command.Params["data"] = rawCommand
+		command.RawCommand += ("\r\n" + rawCommand)
+		err := command.createJobFromParams()
+		// log.Println("GOT MORE PUT", c, err)
+		command.Err = err
+		return true, err
+	}
+
+	// Unknown command, secondround.
 	return true, nil
 }
 
