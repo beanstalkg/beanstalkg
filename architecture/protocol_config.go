@@ -7,7 +7,15 @@ type CommandParseOptions struct {
 	Name           CommandName
 }
 
+type CommandReplyOptions struct {
+	Result   bool
+	Message  string
+	Param    string
+	UseJobID bool
+}
+
 var cmdParseOptions map[CommandName]CommandParseOptions
+var cmdReplyOptions map[CommandName]CommandReplyOptions
 
 func init() {
 	cmdParseOptions = map[CommandName]CommandParseOptions{
@@ -70,6 +78,57 @@ func init() {
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
+		},
+	}
+
+	cmdReplyOptions = map[CommandName]CommandReplyOptions{
+		USE: CommandReplyOptions{
+			Result:   false,
+			Message:  "USING",
+			Param:    "tube",
+			UseJobID: false,
+		},
+		PUT: CommandReplyOptions{
+			Result:   false,
+			Message:  "INSERTED",
+			Param:    "",
+			UseJobID: true,
+		},
+		WATCH: CommandReplyOptions{
+			Result:   false,
+			Message:  "WATCHING",
+			Param:    "count",
+			UseJobID: false,
+		},
+		IGNORE: CommandReplyOptions{
+			Result:   false,
+			Message:  "WATCHING",
+			Param:    "count",
+			UseJobID: false,
+		},
+		DELETE: CommandReplyOptions{
+			Result:   false,
+			Message:  "DELETED",
+			Param:    "",
+			UseJobID: false,
+		},
+		RELEASE: CommandReplyOptions{
+			Result:   false,
+			Message:  "RELEASED",
+			Param:    "",
+			UseJobID: false,
+		},
+		BURY: CommandReplyOptions{
+			Result:   false,
+			Message:  "BURIED",
+			Param:    "",
+			UseJobID: false,
+		},
+		TOUCH: CommandReplyOptions{
+			Result:   false,
+			Message:  "INSERTED",
+			Param:    "",
+			UseJobID: true,
 		},
 	}
 }
