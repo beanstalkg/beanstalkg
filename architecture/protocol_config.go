@@ -19,61 +19,61 @@ var cmdReplyOptions map[CommandName]CommandReplyOptions
 
 func init() {
 	cmdParseOptions = map[CommandName]CommandParseOptions{
-		USE: CommandParseOptions{
+		USE: {
 			Name:           USE,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
 		},
-		PUT: CommandParseOptions{
+		PUT: {
 			Name:           PUT,
 			ExpectedLength: 5,
 			WaitingForMore: true,
 			Params:         []string{"pri", "delay", "ttr", "bytes"},
 		},
-		WATCH: CommandParseOptions{
+		WATCH: {
 			Name:           WATCH,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"tube"},
 		},
-		IGNORE: CommandParseOptions{
+		IGNORE: {
 			Name:           IGNORE,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"tube"},
 		},
-		RESERVE: CommandParseOptions{
+		RESERVE: {
 			Name:           RESERVE,
 			ExpectedLength: 1,
 			WaitingForMore: false,
 			Params:         []string{},
 		},
-		RESERVE_WITH_TIMEOUT: CommandParseOptions{
+		RESERVE_WITH_TIMEOUT: {
 			Name:           RESERVE_WITH_TIMEOUT,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"timeout"},
 		},
-		DELETE: CommandParseOptions{
+		DELETE: {
 			Name:           DELETE,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
 		},
-		RELEASE: CommandParseOptions{
+		RELEASE: {
 			Name:           RELEASE,
 			ExpectedLength: 4,
 			WaitingForMore: false,
 			Params:         []string{"id", "pri", "delay"},
 		},
-		BURY: CommandParseOptions{
+		BURY: {
 			Name:           BURY,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id", "pri"},
 		},
-		TOUCH: CommandParseOptions{
+		TOUCH: {
 			Name:           TOUCH,
 			ExpectedLength: 2,
 			WaitingForMore: false,
@@ -82,49 +82,49 @@ func init() {
 	}
 
 	cmdReplyOptions = map[CommandName]CommandReplyOptions{
-		USE: CommandReplyOptions{
+		USE: {
 			Result:   false,
 			Message:  "USING",
 			Param:    "tube",
 			UseJobID: false,
 		},
-		PUT: CommandReplyOptions{
+		PUT: {
 			Result:   false,
 			Message:  "INSERTED",
 			Param:    "",
 			UseJobID: true,
 		},
-		WATCH: CommandReplyOptions{
+		WATCH: {
 			Result:   false,
 			Message:  "WATCHING",
 			Param:    "count",
 			UseJobID: false,
 		},
-		IGNORE: CommandReplyOptions{
+		IGNORE: {
 			Result:   false,
 			Message:  "WATCHING",
 			Param:    "count",
 			UseJobID: false,
 		},
-		DELETE: CommandReplyOptions{
+		DELETE: {
 			Result:   false,
 			Message:  "DELETED",
 			Param:    "",
 			UseJobID: false,
 		},
-		RELEASE: CommandReplyOptions{
+		RELEASE: {
 			Result:   false,
 			Message:  "RELEASED",
 			Param:    "",
 			UseJobID: false,
 		},
-		BURY: CommandReplyOptions{
+		BURY: {
 			Result:   false,
 			Message:  "BURIED",
 			Param:    "",
 			UseJobID: false,
 		},
-		TOUCH: CommandReplyOptions{
+		TOUCH: {
 			Result:   false,
 			Message:  "INSERTED",
 			Param:    "",
