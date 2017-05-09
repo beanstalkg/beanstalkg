@@ -145,6 +145,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 		}
 
 		// Store command info.  For future logging, maybe?
+		command.Params = map[string]string{}
 		command.RawCommand = rawCommand
 		for i, paramName := range opts.Params {
 			command.Params[paramName] = parts[i+1]
