@@ -1,10 +1,10 @@
 package architecture
 
 import (
-	"errors"
-	"github.com/satori/go.uuid"
-	"time"
 	"strconv"
+	"time"
+
+	"github.com/satori/go.uuid"
 )
 
 type State int
@@ -35,23 +35,24 @@ type Job struct {
 }
 
 func NewJob(id string, pri, delay, ttr, bytes int64, data string) *Job {
-	j := new(Job)
-	j.id = id
-	j.Pri = pri
-	j.Delay = delay
-	j.TTR = ttr
-	j.Bytes = bytes
-	j.Data = data
-	if j.Delay <= 0 {
-		j.state = READY
+	job := &Job{
+		id:    id,
+		Pri:   pri,
+		Delay: delay,
+		TTR:   ttr,
+		Bytes: bytes,
+		Data:  data,
+	}
+	if job.Delay <= 0 {
+		job.state = READY
 		// add to the ready queue
 	} else {
-		j.state = DELAYED
-		j.StartedDelayAt = time.Now().UnixNano()
+		job.state = DELAYED
+		job.StartedDelayAt = time.Now().UnixNano()
 		// add to the delayed queue
 	}
-	j.timestamp = time.Now().UnixNano()
-	return j
+	job.timestamp = time.Now().UnixNano()
+	return job
 }
 
 /**
@@ -75,72 +76,64 @@ func NewJob(id string, pri, delay, ttr, bytes int64, data string) *Job {
                        |  delete
                         `--------> *poof*
 */
-func (j *Job) SetState(state State) error {
-	switch state {
-	case READY:
-		if j.state == RESERVED || j.state == DELAYED || j.state == BURIED {
-			j.state = state
-		} else {
-			return errors.New("Invalid state transition to READY")
-		}
-	case DELAYED:
-		if j.state == RESERVED {
-			j.state = state
-			j.StartedDelayAt = time.Now().UnixNano()
-		} else {
-			return errors.New("Invalid state transition to RESERVED")
-		}
-	case RESERVED:
-		if j.state == READY {
-			j.state = state
-			j.StartedTTRAt = time.Now().UnixNano()
-		} else {
-			return errors.New("Invalid state transition to RESERVED")
-		}
-	case BURIED:
-		if j.state == RESERVED {
-			j.state = state
-		} else {
-			return errors.New("Invalid state transition to BURIED")
-		}
+func (job *Job) SetState(state State) error {
+	// Ensure the desired to state is valid.
+	validFrom, ok := validTransitionsTo[state]
+	if !ok {
+		return nil
 	}
+
+	// The to state is valid.  Now ensure that we are coming from
+	// a valid state.
+	if validp, _ := validFrom[job.state]; !validp {
+		return transitionErrors[state]
+	}
+
+	// All is well here.
+	job.state = state
+
+	// If a timer needs updating, do so.
+	if f, ok := updateFuncs[state]; ok {
+		f(job, time.Now().UnixNano())
+	}
+
 	return nil
 }
 
-func (j *Job) State() State {
-	return j.state
+func (job *Job) State() State {
+	return job.state
 }
 
 // Return proper key according to the present job state
-func (j *Job) Key() int64 {
-	switch j.state {
+func (job *Job) Key() int64 {
+	switch job.state {
 	case READY:
-		return j.Pri
+		return job.Pri
 	case DELAYED:
 		// time remaining from Delay till it gets ready becomes priority
-		// log.Println(j.Delay * NANO, time.Now().UnixNano(), j.StartedDelayAt)
-		return j.Delay * NANO - (time.Now().UnixNano() - j.StartedDelayAt)
+		// log.Println(job.Delay * NANO, time.Now().UnixNano(), job.StartedDelayAt)
+		return job.Delay*NANO - (time.Now().UnixNano() - job.StartedDelayAt)
 	case RESERVED:
 		// time remaining from TTR till it gets ready becomes the priority
-		return j.TTR * NANO - (time.Now().UnixNano() - j.StartedTTRAt)
+		return job.TTR*NANO - (time.Now().UnixNano() - job.StartedTTRAt)
 	}
 	return 0
 }
 
-func (j *Job) Id() string {
-	return j.id
+func (job *Job) Id() string {
+	return job.id
 }
 
-func (j *Job) Timestamp() int64 {
-	return j.timestamp
+func (job *Job) Timestamp() int64 {
+	return job.timestamp
 }
 
-func (j *Job) Enqueued() {
-	j.timestamp = time.Now().UnixNano()
+func (job *Job) Enqueued() {
+	job.timestamp = time.Now().UnixNano()
 }
 
-func (j *Job) Dequeued() {
-	j.timestamp = time.Now().UnixNano()
+func (job *Job) Dequeued() {
+	job.timestamp = time.Now().UnixNano()
 }
 
 // AwaitingClient stores an awaiting client send channel for a tube
@@ -149,7 +142,7 @@ type AwaitingClient struct {
 	SendChannel chan Command
 	Request     Command
 	QueuedAt    int64
-	Timeout	    int64
+	Timeout     int64
 }
 
 func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClient {
