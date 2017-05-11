@@ -16,7 +16,7 @@ I wish to complete rest of the commands soon but any help is always appreciated.
 
 ### Running Locally
 
-Please install golang(binaries will be released in the future) and then clone this repo and run,
+Please install golang(binaries will be released in the future) and then clone this repo and from the root run,
 
 - `go install`
 - `go run main.go`
