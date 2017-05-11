@@ -20,3 +20,7 @@ Please install golang(binaries will be released in the future) and then clone th
 
 - `go install`
 - `go run main.go`
+
+## Licensing
+
+beanstalkg is licensed under the Apache License, Version 2.0. See [LICENSE]((https://github.com/vimukthi-git/beanstalkg/blob/master/LICENSE)) for the full license text.
