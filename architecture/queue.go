@@ -11,6 +11,7 @@ var log = logging.MustGetLogger("BEANSTALKG")
 const QUEUE_FREQUENCY time.Duration = 20  * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
 const MAX_JOBS_PER_ITERATION int = 20
 
+// PriorityQueue is the interface that all backends should implement, See backend/min_heap.go for an example
 type PriorityQueue interface {
 	Init()
 	// queue item
@@ -27,6 +28,7 @@ type PriorityQueue interface {
 	Size() int
 }
 
+// PriorityQueueItem is a single item in the PriorityQueue. This interface helps in isolating details of backend items
 type PriorityQueueItem interface {
 	Key() int64
 	Id() string
@@ -35,6 +37,7 @@ type PriorityQueueItem interface {
 	Dequeued()
 }
 
+// Tube represents a single tube(queue) in the beanstalkg server
 type Tube struct {
 	Name            string
 	Ready           PriorityQueue
