@@ -37,6 +37,7 @@ type PriorityQueueItem interface {
 	Dequeued()
 }
 
+// Tube represents a single tube(queue) in the beanstalkg server
 type Tube struct {
 	Name            string
 	Ready           PriorityQueue
