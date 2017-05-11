@@ -23,4 +23,4 @@ Please install golang(binaries will be released in the future) and then clone th
 
 ## Licensing
 
-beanstalkg is licensed under the Apache License, Version 2.0. See [LICENSE]((https://github.com/vimukthi-git/beanstalkg/blob/master/LICENSE)) for the full license text.
+beanstalkg is licensed under the MIT License. See [LICENSE]((https://github.com/vimukthi-git/beanstalkg/blob/master/LICENSE)) for the full license text.
