@@ -11,6 +11,7 @@ var log = logging.MustGetLogger("BEANSTALKG")
 const QUEUE_FREQUENCY time.Duration = 20  * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
 const MAX_JOBS_PER_ITERATION int = 20
 
+// PriorityQueue is the interface that all backends should implement, See backend/min_heap.go for an example
 type PriorityQueue interface {
 	Init()
 	// queue item
