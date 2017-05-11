@@ -4,8 +4,7 @@ WORKDIR /src/github.com/vimukthi-git/beanstalkg
 COPY . /src/github.com/vimukthi-git/beanstalkg
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /beanstalkg .
 
-FROM scratch
-ADD ca-certificates.crt /etc/ssl/certs/
+FROM centurylink/ca-certs
 COPY --from=0 /beanstalkg /
 EXPOSE 11300
 CMD ["/beanstalkg"]
