@@ -28,6 +28,7 @@ type PriorityQueue interface {
 	Size() int
 }
 
+// PriorityQueueItem is a single item in the PriorityQueue. This interface helps in isolating details of backend items
 type PriorityQueueItem interface {
 	Key() int64
 	Id() string
