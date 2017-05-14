@@ -52,6 +52,7 @@ jobs:
     working_directory: /go/src/github.com/vimukthi-git/beanstalkg
     steps:
       - setup_remote_docker
+      - checkout
       - run:
           name: Install Docker client
           command: |
