@@ -26,14 +26,14 @@ func NewTubeRegister(
 							createTubeHandler(c.Params["tube"], watchedTubeConnectionsReceiver)
 					}
 					useTubeConnectionReceiver <- tubeChannels[c.Params["tube"]]
-					log.Debug("TUBE_REGISTER sent tube: ", c.Params["tube"])
+					log.Debug("TUBE_REGISTER sent tube for use: ", c.Params["tube"])
 				case architecture.WATCH:
 					if _, ok := tubeChannels[c.Params["tube"]]; !ok {
 						tubeChannels[c.Params["tube"]], tubeStopChannels[c.Params["tube"]] =
 							createTubeHandler(c.Params["tube"], watchedTubeConnectionsReceiver)
 					}
 					useTubeConnectionReceiver <- tubeChannels[c.Params["tube"]]
-					log.Debug("TUBE_REGISTER sent tube: ", c.Params["tube"])
+					log.Debug("TUBE_REGISTER sent tube for watch: ", c.Params["tube"])
 				}
 			// TODO handle commands and send tubeChannels to clients if required
 			case <-stop:

@@ -23,7 +23,7 @@ func init() {
 			Name:           USE,
 			ExpectedLength: 2,
 			WaitingForMore: false,
-			Params:         []string{"id"},
+			Params:         []string{"tube"},
 		},
 		PUT: {
 			Name:           PUT,

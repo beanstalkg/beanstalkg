@@ -151,6 +151,7 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			command.Params[paramName] = parts[i+1]
 		}
 		command.WaitingForMore = opts.WaitingForMore
+		log.Debug("PROTOCOL command after parsing ", command)
 
 		return !command.WaitingForMore, nil
 	}
