@@ -6,54 +6,72 @@ import (
 
 const DEFAULT_TUBE string = "default"
 
+type TubeRegister struct {
+	tubeStopChannels map[string]chan bool
+	tubeChannels map[string]chan architecture.Command
+	commands chan architecture.Command
+	useTubeConnectionReceiver chan chan architecture.Command
+	watchedTubeConnectionsReceiver chan chan architecture.Command
+	stop chan bool
+}
+
+func (tr *TubeRegister) init()  {
+	tr.tubeChannels[DEFAULT_TUBE], tr.tubeStopChannels[DEFAULT_TUBE] = tr.createTubeHandler(DEFAULT_TUBE,
+		tr.watchedTubeConnectionsReceiver)
+	for {
+		select {
+		case c := <-tr.commands:
+			switch c.Name {
+			case architecture.USE:
+				fallthrough
+			case architecture.WATCH:
+				tr.createTubeIfNotExists(c.Params["tube"])
+				// send the tube connection to the client
+				tr.useTubeConnectionReceiver <- tr.tubeChannels[c.Params["tube"]]
+				log.Debugf("TUBE_REGISTER sent tube for %s: %s", c.Name, c.Params["tube"])
+			}
+		case <-tr.stop:
+			// TODO send stop signal to all tube channels
+			return
+		}
+	}
+}
+
+func (tr *TubeRegister) createTubeIfNotExists(name string) {
+	if _, ok := tr.tubeChannels[name]; !ok {
+		// create tube_handler if does not exist
+		tr.tubeChannels[name], tr.tubeStopChannels[name] =
+			tr.createTubeHandler(name, tr.watchedTubeConnectionsReceiver)
+	}
+}
+
+// createTubeHandler creates a new tube_handler with required command channel and stop channel
+func (tr *TubeRegister) createTubeHandler(
+	name string, watchedTubeConnectionsReceiver chan chan architecture.Command) (
+		chan architecture.Command, chan bool) {
+	tubeChannel := make(chan architecture.Command)
+	stop := make(chan bool)
+	NewTubeHandler(name, tubeChannel, watchedTubeConnectionsReceiver, stop)
+	return tubeChannel, stop
+}
+
 func NewTubeRegister(
 	commands chan architecture.Command,
 	useTubeConnectionReceiver chan chan architecture.Command,
 	watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
 ) {
-	go func() {
-		tubeStopChannels := make(map[string]chan bool)
-		tubeChannels := make(map[string]chan architecture.Command)
-		tubeChannels[DEFAULT_TUBE], tubeStopChannels[DEFAULT_TUBE] = createTubeHandler(DEFAULT_TUBE, watchedTubeConnectionsReceiver)
-		for {
-			select {
-			case c := <-commands:
-				switch c.Name {
-				case architecture.USE:
-					if _, ok := tubeChannels[c.Params["tube"]]; !ok {
-						tubeChannels[c.Params["tube"]], tubeStopChannels[c.Params["tube"]] =
-							createTubeHandler(c.Params["tube"], watchedTubeConnectionsReceiver)
-					}
-					useTubeConnectionReceiver <- tubeChannels[c.Params["tube"]]
-					log.Debug("TUBE_REGISTER sent tube for use: ", c.Params["tube"])
-				case architecture.WATCH:
-					if _, ok := tubeChannels[c.Params["tube"]]; !ok {
-						tubeChannels[c.Params["tube"]], tubeStopChannels[c.Params["tube"]] =
-							createTubeHandler(c.Params["tube"], watchedTubeConnectionsReceiver)
-					}
-					useTubeConnectionReceiver <- tubeChannels[c.Params["tube"]]
-					log.Debug("TUBE_REGISTER sent tube for watch: ", c.Params["tube"])
-				}
-			// TODO handle commands and send tubeChannels to clients if required
-			case <-stop:
-				// TODO send stop signal to all tube channels
-				return
-			}
-		}
-	}()
-
-}
-
-func createTubeHandler(
-	name string,
-	watchedTubeConnectionsReceiver chan chan architecture.Command,
-) (
-	chan architecture.Command,
-	chan bool,
-) {
-	tubeChannel := make(chan architecture.Command)
-	stop := make(chan bool)
-	NewTubeHandler(name, tubeChannel, watchedTubeConnectionsReceiver, stop)
-	return tubeChannel, stop
+	// store the tube stop signalling channels
+	tubeStopChannels := make(map[string]chan bool)
+	// store the tube command sending channels
+	tubeChannels := make(map[string]chan architecture.Command)
+	tubeRegister := TubeRegister{
+		tubeStopChannels,
+		tubeChannels,
+		commands,
+		useTubeConnectionReceiver,
+		watchedTubeConnectionsReceiver,
+		stop,
+	}
+	go tubeRegister.init()
 }
