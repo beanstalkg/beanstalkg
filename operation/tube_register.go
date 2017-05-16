@@ -7,15 +7,15 @@ import (
 const DEFAULT_TUBE string = "default"
 
 type TubeRegister struct {
-	tubeStopChannels map[string]chan bool
-	tubeChannels map[string]chan architecture.Command
-	commands chan architecture.Command
-	useTubeConnectionReceiver chan chan architecture.Command
+	tubeStopChannels               map[string]chan bool
+	tubeChannels                   map[string]chan architecture.Command
+	commands                       chan architecture.Command
+	useTubeConnectionReceiver      chan chan architecture.Command
 	watchedTubeConnectionsReceiver chan chan architecture.Command
-	stop chan bool
+	stop                           chan bool
 }
 
-func (tr *TubeRegister) init()  {
+func (tr *TubeRegister) init() {
 	tr.tubeChannels[DEFAULT_TUBE], tr.tubeStopChannels[DEFAULT_TUBE] = tr.createTubeHandler(DEFAULT_TUBE,
 		tr.watchedTubeConnectionsReceiver)
 	for {
@@ -48,7 +48,7 @@ func (tr *TubeRegister) createTubeIfNotExists(name string) {
 // createTubeHandler creates a new tube_handler with required command channel and stop channel
 func (tr *TubeRegister) createTubeHandler(
 	name string, watchedTubeConnectionsReceiver chan chan architecture.Command) (
-		chan architecture.Command, chan bool) {
+	chan architecture.Command, chan bool) {
 	tubeChannel := make(chan architecture.Command)
 	stop := make(chan bool)
 	NewTubeHandler(name, tubeChannel, watchedTubeConnectionsReceiver, stop)

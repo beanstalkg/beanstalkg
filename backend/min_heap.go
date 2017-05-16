@@ -5,8 +5,8 @@ import (
 	"math"
 	//"os"
 	//"runtime/pprof"
-	"time"
 	"github.com/op/go-logging"
+	"time"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")

@@ -1,14 +1,14 @@
 package architecture
 
 import (
-	"time"
 	"errors"
 	"github.com/op/go-logging"
+	"time"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
 
-const QUEUE_FREQUENCY time.Duration = 20  * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
+const QUEUE_FREQUENCY time.Duration = 20 * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
 const MAX_JOBS_PER_ITERATION int = 20
 
 // PriorityQueue is the interface that all backends should implement, See backend/min_heap.go for an example
@@ -39,12 +39,12 @@ type PriorityQueueItem interface {
 
 // Tube represents a single tube(queue) in the beanstalkg server
 type Tube struct {
-	Name            string
-	Ready           PriorityQueue
-	Reserved        PriorityQueue
-	Delayed         PriorityQueue
-	Buried          PriorityQueue
-	AwaitingClients PriorityQueue
+	Name                 string
+	Ready                PriorityQueue
+	Reserved             PriorityQueue
+	Delayed              PriorityQueue
+	Buried               PriorityQueue
+	AwaitingClients      PriorityQueue
 	AwaitingTimedClients map[string]*AwaitingClient
 }
 
@@ -53,30 +53,26 @@ type Tube struct {
 func (tube *Tube) Process() {
 	// log.Println(tube.AwaitingClients.Size())
 	counter := 0
-	for delayedJob := tube.Delayed.Peek();
-			delayedJob != nil && delayedJob.Key() <= 0;
-			delayedJob = tube.Delayed.Peek(){
+	for delayedJob := tube.Delayed.Peek(); delayedJob != nil && delayedJob.Key() <= 0; delayedJob = tube.Delayed.Peek() {
 		log.Debug("QUEUE delayed job got ready: ", delayedJob)
 		delayedJob = tube.Delayed.Dequeue()
 		delayedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(delayedJob)
 		if counter > MAX_JOBS_PER_ITERATION {
-			break;
+			break
 		} else {
 			counter++
 		}
 	}
 	counter = 0
 	// reserved jobs are put to ready
-	for reservedJob := tube.Reserved.Peek();
-			tube.Reserved.Peek() != nil && reservedJob.Key() <= 0;
-			reservedJob = tube.Reserved.Peek() {
+	for reservedJob := tube.Reserved.Peek(); tube.Reserved.Peek() != nil && reservedJob.Key() <= 0; reservedJob = tube.Reserved.Peek() {
 		// log.Println("QUEUE found reserved job thats ready: ", reservedJob)
 		reservedJob = tube.Reserved.Dequeue()
 		reservedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(reservedJob)
 		if counter > MAX_JOBS_PER_ITERATION {
-			break;
+			break
 		} else {
 			counter++
 		}
@@ -93,7 +89,7 @@ func (tube *Tube) Process() {
 		readyJob.SetState(RESERVED)
 		tube.Reserved.Enqueue(readyJob)
 		if counter > MAX_JOBS_PER_ITERATION {
-			break;
+			break
 		} else {
 			counter++
 		}

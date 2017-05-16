@@ -93,12 +93,12 @@ func NewTubeHandler(
 // by changing only here
 func createTube(name string) *architecture.Tube {
 	t := &architecture.Tube{
-		Name: name,
-		Ready: &backend.MinHeap{},
-		Reserved: &backend.MinHeap{},
-		Delayed: &backend.MinHeap{},
-		Buried: &backend.MinHeap{},
-		AwaitingClients: &backend.MinHeap{},
+		Name:                 name,
+		Ready:                &backend.MinHeap{},
+		Reserved:             &backend.MinHeap{},
+		Delayed:              &backend.MinHeap{},
+		Buried:               &backend.MinHeap{},
+		AwaitingClients:      &backend.MinHeap{},
 		AwaitingTimedClients: make(map[string]*architecture.AwaitingClient),
 	}
 	t.Ready.Init()
