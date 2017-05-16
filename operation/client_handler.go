@@ -3,11 +3,11 @@ package operation
 import (
 	"bufio"
 	"errors"
+	"github.com/op/go-logging"
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"net"
 	"reflect"
 	"strconv"
-	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
