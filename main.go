@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"github.com/op/go-logging"
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"github.com/vimukthi-git/beanstalkg/operation"
 	"net"
 	"net/http"
-	"github.com/op/go-logging"
 	_ "net/http/pprof"
 	"os"
 )
@@ -83,7 +83,6 @@ func getConfig(env string) Configuration {
 	}
 	return envConf
 }
-
 
 var log = logging.MustGetLogger("BEANSTALKG")
 var format = logging.MustStringFormatter(

@@ -3,11 +3,11 @@ package operation
 import (
 	"bufio"
 	"errors"
+	"github.com/op/go-logging"
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	"net"
 	"reflect"
 	"strconv"
-	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
@@ -133,7 +133,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		}
 	case architecture.RESERVE:
 		command = client.reserve(command)
-	case architecture.RESERVE_WITH_TIMEOUT: // TODO add a new queue to each tube to track timeout client ids to handle this
+	case architecture.RESERVE_WITH_TIMEOUT:
 		command = client.reserve(command)
 	case architecture.DELETE:
 		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
