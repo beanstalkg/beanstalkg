@@ -51,7 +51,8 @@ func NewTubeHandler(
 					tube.AwaitingTimedClients[client.Id()] = client
 					tube.ProcessTimedClients()
 				case architecture.DELETE:
-					if tube.Buried.Delete(c.Params["id"]) != nil || tube.Reserved.Delete(c.Params["id"]) != nil {
+					if tube.Buried.Delete(c.Params["id"]) != nil ||
+						tube.Reserved.Delete(c.Params["id"]) != nil {
 						// log.Println("TUBE_HANDLER deleted job: ", c, name)
 						c.Err = nil
 					} else {
