@@ -25,6 +25,8 @@ const (
 	RELEASE                          = "release"
 	BURY                             = "bury"
 	TOUCH                            = "touch"
+	KICK                             = "kick"
+	KICK_JOB                         = "kick-job"
 )
 
 const (
