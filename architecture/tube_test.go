@@ -1,9 +1,9 @@
 package architecture
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"testing"
 )
 
 func TestTube_ProcessDelayedQueueWhenLessJobsReadyThanLimit(t *testing.T) {
@@ -34,7 +34,7 @@ func TestTube_ProcessDelayedQueueWhenLessJobsReadyThanLimit(t *testing.T) {
 
 	// === when
 	// jobs in the delayed queue(2) < limit(5)
-	testTube.ProcessDelayedQueue(5);
+	testTube.ProcessDelayedQueue(5)
 
 	// === then
 	ready.AssertNumberOfCalls(t, "Enqueue", 2)
@@ -58,7 +58,7 @@ func TestTube_ProcessDelayedQueueWhenMoreJobsReadyThanLimit(t *testing.T) {
 
 	// === when
 	// jobs in the delayed queue(infinit) > limit(5)
-	testTube.ProcessDelayedQueue(5);
+	testTube.ProcessDelayedQueue(5)
 
 	// === then
 	ready.AssertNumberOfCalls(t, "Enqueue", 5)
@@ -91,7 +91,7 @@ func TestTube_ProcessReservedQueueWhenLessJobsReadyThanLimit(t *testing.T) {
 
 	// === when
 	// jobs in the delayed queue(infinit) > limit(5)
-	testTube.ProcessReservedQueue(5);
+	testTube.ProcessReservedQueue(5)
 
 	// === then
 	ready.AssertNumberOfCalls(t, "Enqueue", 2)
@@ -115,7 +115,7 @@ func TestTube_ProcessReservedQueueWhenMoreJobsReadyThanLimit(t *testing.T) {
 
 	// === when
 	// jobs in the delayed queue(infinit) > limit(5)
-	testTube.ProcessReservedQueue(5);
+	testTube.ProcessReservedQueue(5)
 
 	// === then
 	ready.AssertNumberOfCalls(t, "Enqueue", 5)
@@ -134,12 +134,12 @@ func getTestTube(t *testing.T) *Tube {
 		assert.Equal(t, READY, job.State())
 	})
 
-	return &Tube {
-		Name: "test_tube",
-		Ready: &ready,
+	return &Tube{
+		Name:     "test_tube",
+		Ready:    &ready,
 		Reserved: &reserved,
-		Delayed: &delayed,
-		Buried: &buried,
+		Delayed:  &delayed,
+		Buried:   &buried,
 	}
 }
 

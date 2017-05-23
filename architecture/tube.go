@@ -9,7 +9,7 @@ import (
 var log = logging.MustGetLogger("BEANSTALKG")
 
 const QUEUE_FREQUENCY time.Duration = 20 * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
-const MAX_JOBS_PER_ITERATION int = 20 // maximum number of jobs processed per queue per one cycle
+const MAX_JOBS_PER_ITERATION int = 20                       // maximum number of jobs processed per queue per one cycle
 
 // PriorityQueue is the interface that all backends should implement, See backend/min_heap.go for an example
 type PriorityQueue interface {
@@ -63,7 +63,7 @@ func (tube *Tube) ProcessDelayedQueue(limit int) {
 	// log.Debug("Number of awaiting clients", tube.AwaitingClients.Size())
 	counter := 1
 	for delayedJob := tube.Delayed.Peek(); delayedJob != nil &&
-			delayedJob.Key() <= 0; delayedJob = tube.Delayed.Peek() {
+		delayedJob.Key() <= 0; delayedJob = tube.Delayed.Peek() {
 		log.Debug("QUEUE delayed job got ready: ", delayedJob)
 		delayedJob = tube.Delayed.Dequeue()
 		delayedJob.(*Job).SetState(READY)
@@ -82,7 +82,7 @@ func (tube *Tube) ProcessReservedQueue(limit int) {
 	counter := 1
 	// reserved jobs are put to ready
 	for reservedJob := tube.Reserved.Peek(); reservedJob != nil &&
-			reservedJob.Key() <= 0; reservedJob = tube.Reserved.Peek() {
+		reservedJob.Key() <= 0; reservedJob = tube.Reserved.Peek() {
 		// log.Println("QUEUE found reserved job thats ready: ", reservedJob)
 		reservedJob = tube.Reserved.Dequeue()
 		reservedJob.(*Job).SetState(READY)
