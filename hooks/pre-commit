@@ -16,6 +16,7 @@ else
 fi
 echo "${reset}"
 
+
 # Check if changes to Godeps are reproducible...
 files=($(git diff --cached --name-only --diff-filter ACM | grep "Godeps"))
 if [[ "${#files[@]}" -ne 0 ]]; then
