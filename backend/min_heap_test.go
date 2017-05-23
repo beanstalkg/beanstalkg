@@ -2,6 +2,7 @@ package backend
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -40,6 +41,7 @@ func TestMinHeap_Insert(t *testing.T) {
 func TestMinHeap_Dequeue(t *testing.T) {
 	m := MinHeap{}
 
+	// MinHeap is FIFO when ids match.
 	var tt_expectedIds = []string{"one", "two", "three", "four"}
 
 	for _, testItem := range tt[numberOfInserts:] {
@@ -56,6 +58,22 @@ func TestMinHeap_Dequeue(t *testing.T) {
 
 	if item := m.Dequeue(); item != nil {
 		t.Errorf("Expected nil, got %#v", item)
+	}
+}
+
+func TestMinHeap_Delete(t *testing.T) {
+	m := MinHeap{}
+
+	var tests = tt[:numberOfInserts]
+	var testToDelete = tests[rand.Intn(len(tests))]
+
+	for _, testItem := range tests {
+		m.Enqueue(testItem)
+	}
+
+	m.Delete(testToDelete.Id())
+	if item := m.Find(testToDelete.Id()); item != nil {
+		t.Errorf("Deleted %s earlier, but still exists in heap; %s.", testToDelete.Id(), item.Id())
 	}
 }
 
