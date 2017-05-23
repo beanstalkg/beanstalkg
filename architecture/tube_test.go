@@ -90,7 +90,7 @@ func TestTube_ProcessReservedQueueWhenLessJobsReadyThanLimit(t *testing.T) {
 	})
 
 	// === when
-	// jobs in the delayed queue(infinit) > limit(5)
+	// jobs in the reserved queue(infinit) > limit(5)
 	testTube.ProcessReservedQueue(5)
 
 	// === then
@@ -114,7 +114,7 @@ func TestTube_ProcessReservedQueueWhenMoreJobsReadyThanLimit(t *testing.T) {
 	})
 
 	// === when
-	// jobs in the delayed queue(infinit) > limit(5)
+	// jobs in the reserved queue(infinit) > limit(5)
 	testTube.ProcessReservedQueue(5)
 
 	// === then
