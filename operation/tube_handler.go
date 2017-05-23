@@ -81,29 +81,29 @@ func NewTubeHandler(
 					}
 					commands <- c.Copy()
 				}
-			case architecture.KICK:
-				amount := 0
-				bound := strconv.Atoi(c.Params["bound"])
-				for amount < bound {
-					job := tube.Buried.Dequeue()
-					job.SetState(architecture.READY)
-					tube.Ready.Enqueue(job)
-					amount += 1
-				}
-				commands <- c.Copy()
-			case architecture.KICK_JOB:
-				item := tube.Buried.Delete(c.Params["id"])
-				if item != nil {
-					job := item.(*architecture.Job)
-					job.SetState(architecture.READY)
-					tube.Ready.Enqueue(job)
-				} else {
-					c.Err = errors.New(architecture.NOT_FOUND)
-				}
-				commands <- c.Copy()
-			case <-stop:
-				ticker.Stop()
-				return
+				case architecture.KICK:
+					amount := 0
+					bound := strconv.Atoi(c.Params["bound"])
+					for amount < bound {
+						job := tube.Buried.Dequeue()
+						job.SetState(architecture.READY)
+						tube.Ready.Enqueue(job)
+						amount += 1
+					}
+					commands <- c.Copy()
+				case architecture.KICK_JOB:
+					item := tube.Buried.Delete(c.Params["id"])
+					if item != nil {
+						job := item.(*architecture.Job)
+						job.SetState(architecture.READY)
+						tube.Ready.Enqueue(job)
+					} else {
+						c.Err = errors.New(architecture.NOT_FOUND)
+					}
+					commands <- c.Copy()
+				case <-stop:
+					ticker.Stop()
+					return
 			}
 		}
 	}()
