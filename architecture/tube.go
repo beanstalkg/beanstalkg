@@ -9,7 +9,7 @@ import (
 var log = logging.MustGetLogger("BEANSTALKG")
 
 const QUEUE_FREQUENCY time.Duration = 20 * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
-const MAX_JOBS_PER_ITERATION int = 20
+const MAX_JOBS_PER_ITERATION int = 20 // maximum number of jobs processed per queue per one cycle
 
 // PriorityQueue is the interface that all backends should implement, See backend/min_heap.go for an example
 type PriorityQueue interface {
@@ -28,7 +28,8 @@ type PriorityQueue interface {
 	Size() int
 }
 
-// PriorityQueueItem is a single item in the PriorityQueue. This interface helps in isolating details of backend items
+// PriorityQueueItem is a single item in the PriorityQueue.
+// This interface helps in isolating details of backend items
 type PriorityQueueItem interface {
 	Key() int64
 	Id() string
@@ -48,36 +49,56 @@ type Tube struct {
 	AwaitingTimedClients map[string]*AwaitingClient
 }
 
-// Process runs all the necessary operations for upkeep of the tube
-// TODO unit test
+// Process runs all the necessary operations for upkeep of the tube. Just a convenience method.
 func (tube *Tube) Process() {
-	// log.Println(tube.AwaitingClients.Size())
-	counter := 0
-	for delayedJob := tube.Delayed.Peek(); delayedJob != nil && delayedJob.Key() <= 0; delayedJob = tube.Delayed.Peek() {
+	tube.ProcessDelayedQueue(MAX_JOBS_PER_ITERATION)
+	tube.ProcessReservedQueue(MAX_JOBS_PER_ITERATION)
+	tube.ProcessReadyQueue(MAX_JOBS_PER_ITERATION)
+}
+
+// ProcessDelayedQueue processes the Delayed queue.
+// Which involves checking if any delayed jobs are ready to be served to clients
+// and enqueuing those jobs that are ready on Ready queue
+func (tube *Tube) ProcessDelayedQueue(limit int) {
+	// log.Debug("Number of awaiting clients", tube.AwaitingClients.Size())
+	counter := 1
+	for delayedJob := tube.Delayed.Peek(); delayedJob != nil &&
+			delayedJob.Key() <= 0; delayedJob = tube.Delayed.Peek() {
 		log.Debug("QUEUE delayed job got ready: ", delayedJob)
 		delayedJob = tube.Delayed.Dequeue()
 		delayedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(delayedJob)
-		if counter > MAX_JOBS_PER_ITERATION {
+		if counter >= limit {
 			break
-		} else {
-			counter++
 		}
+		counter++
 	}
-	counter = 0
+}
+
+// ProcessReservedQueue processes the Reserved queue.
+// Which involves checking if any reserved jobs have timed out while being processed by clients
+// and enqueuing those jobs that have timeout on Ready queue, so that other clients can reserved it again.
+func (tube *Tube) ProcessReservedQueue(limit int) {
+	counter := 1
 	// reserved jobs are put to ready
-	for reservedJob := tube.Reserved.Peek(); tube.Reserved.Peek() != nil && reservedJob.Key() <= 0; reservedJob = tube.Reserved.Peek() {
+	for reservedJob := tube.Reserved.Peek(); reservedJob != nil &&
+			reservedJob.Key() <= 0; reservedJob = tube.Reserved.Peek() {
 		// log.Println("QUEUE found reserved job thats ready: ", reservedJob)
 		reservedJob = tube.Reserved.Dequeue()
 		reservedJob.(*Job).SetState(READY)
 		tube.Ready.Enqueue(reservedJob)
-		if counter > MAX_JOBS_PER_ITERATION {
+		if counter >= limit {
 			break
-		} else {
-			counter++
 		}
+		counter++
 	}
-	counter = 0
+}
+
+// ProcessReadyQueue processes the Ready queue.
+// Which involves pushing ready jobs to awaiting clients and putting the sent jobs
+// to Reserved queue
+func (tube *Tube) ProcessReadyQueue(limit int) {
+	counter := 1
 	// ready jobs are sent
 	for tube.AwaitingClients.Peek() != nil && tube.Ready.Peek() != nil {
 		availableClientConnection := tube.AwaitingClients.Dequeue()
@@ -88,11 +109,10 @@ func (tube *Tube) Process() {
 		client.SendChannel <- client.Request.Copy()
 		readyJob.SetState(RESERVED)
 		tube.Reserved.Enqueue(readyJob)
-		if counter > MAX_JOBS_PER_ITERATION {
+		if counter >= limit {
 			break
-		} else {
-			counter++
 		}
+		counter++
 	}
 }
 
