@@ -6,6 +6,7 @@ import (
 	"github.com/vimukthi-git/beanstalkg/backend"
 	// "log"
 	"time"
+	"strconv"
 )
 
 func NewTubeHandler(
@@ -80,12 +81,15 @@ func NewTubeHandler(
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
 					commands <- c.Copy()
-				}
 				case architecture.KICK:
 					amount := 0
-					bound := strconv.Atoi(c.Params["bound"])
+					bound, err := strconv.Atoi(c.Params["bound"])
+					if err != nil {
+						// handle non-integer number of jobs to kick
+					}
 					for amount < bound {
-						job := tube.Buried.Dequeue()
+						item := tube.Buried.Dequeue()
+						job := item.(*architecture.Job)
 						job.SetState(architecture.READY)
 						tube.Ready.Enqueue(job)
 						amount += 1
@@ -101,9 +105,10 @@ func NewTubeHandler(
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
 					commands <- c.Copy()
-				case <-stop:
-					ticker.Stop()
-					return
+				}
+			case <-stop:
+				ticker.Stop()
+				return
 			}
 		}
 	}()
