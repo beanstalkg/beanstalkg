@@ -9,8 +9,8 @@ import (
 func TestTube_ProcessDelayedQueueWhenLessJobsReadyThanLimit(t *testing.T) {
 	// === given
 	testTube := getTestTube(t)
-	delayed := testTube.Delayed.(*MockPriorityQueue)
-	ready := testTube.Ready.(*MockPriorityQueue)
+	delayed := testTube.delayed.(*MockPriorityQueue)
+	ready := testTube.ready.(*MockPriorityQueue)
 
 	// return a job two times when Peeking
 	maxPeeks := 0
@@ -43,8 +43,8 @@ func TestTube_ProcessDelayedQueueWhenLessJobsReadyThanLimit(t *testing.T) {
 func TestTube_ProcessDelayedQueueWhenMoreJobsReadyThanLimit(t *testing.T) {
 	// === given
 	testTube := getTestTube(t)
-	delayed := testTube.Delayed.(*MockPriorityQueue)
-	ready := testTube.Ready.(*MockPriorityQueue)
+	delayed := testTube.delayed.(*MockPriorityQueue)
+	ready := testTube.ready.(*MockPriorityQueue)
 
 	// return a job infinite times when Peeking
 	delayed.On("Peek").Return(func() PriorityQueueItem {
@@ -67,8 +67,8 @@ func TestTube_ProcessDelayedQueueWhenMoreJobsReadyThanLimit(t *testing.T) {
 func TestTube_ProcessReservedQueueWhenLessJobsReadyThanLimit(t *testing.T) {
 	// === given
 	testTube := getTestTube(t)
-	reserved := testTube.Reserved.(*MockPriorityQueue)
-	ready := testTube.Ready.(*MockPriorityQueue)
+	reserved := testTube.reserved.(*MockPriorityQueue)
+	ready := testTube.ready.(*MockPriorityQueue)
 	// return a job two times when Peeking
 	maxPeeks := 0
 	reserved.On("Peek").Return(func() PriorityQueueItem {
@@ -100,8 +100,8 @@ func TestTube_ProcessReservedQueueWhenLessJobsReadyThanLimit(t *testing.T) {
 func TestTube_ProcessReservedQueueWhenMoreJobsReadyThanLimit(t *testing.T) {
 	// === given
 	testTube := getTestTube(t)
-	reserved := testTube.Reserved.(*MockPriorityQueue)
-	ready := testTube.Ready.(*MockPriorityQueue)
+	reserved := testTube.reserved.(*MockPriorityQueue)
+	ready := testTube.ready.(*MockPriorityQueue)
 
 	// return a job infinite times when Peeking
 	reserved.On("Peek").Return(func() PriorityQueueItem {
@@ -136,10 +136,10 @@ func getTestTube(t *testing.T) *Tube {
 
 	return &Tube{
 		Name:     "test_tube",
-		Ready:    &ready,
-		Reserved: &reserved,
-		Delayed:  &delayed,
-		Buried:   &buried,
+		ready:    &ready,
+		reserved: &reserved,
+		delayed:  &delayed,
+		buried:   &buried,
 	}
 }
 
