@@ -38,15 +38,35 @@ type PriorityQueueItem interface {
 	Dequeued()
 }
 
+type PriorityQueueCreator func() PriorityQueue
+
 // Tube represents a single tube(queue) in the beanstalkg server
 type Tube struct {
 	Name                 string
-	Ready                PriorityQueue
-	Reserved             PriorityQueue
-	Delayed              PriorityQueue
-	Buried               PriorityQueue
-	AwaitingClients      PriorityQueue
-	AwaitingTimedClients map[string]*AwaitingClient
+	ready                PriorityQueue
+	reserved             PriorityQueue
+	delayed              PriorityQueue
+	buried               PriorityQueue
+	awaitingClients      PriorityQueue
+	awaitingTimedClients map[string]*AwaitingClient
+}
+
+func NewTube(name string, priorityQueueCreator PriorityQueueCreator) *Tube {
+	tube := &Tube{
+		Name:                 name,
+		ready:                priorityQueueCreator(),
+		reserved:             priorityQueueCreator(),
+		delayed:              priorityQueueCreator(),
+		buried:               priorityQueueCreator(),
+		awaitingClients:      priorityQueueCreator(),
+		awaitingTimedClients: make(map[string]*AwaitingClient),
+	}
+	tube.ready.Init()
+	tube.delayed.Init()
+	tube.reserved.Init()
+	tube.buried.Init()
+	tube.awaitingClients.Init()
+	return tube
 }
 
 // Process runs all the necessary operations for upkeep of the tube. Just a convenience method.
@@ -62,12 +82,12 @@ func (tube *Tube) Process() {
 func (tube *Tube) ProcessDelayedQueue(limit int) {
 	// log.Debug("Number of awaiting clients", tube.AwaitingClients.Size())
 	counter := 1
-	for delayedJob := tube.Delayed.Peek(); delayedJob != nil &&
-		delayedJob.Key() <= 0; delayedJob = tube.Delayed.Peek() {
+	for delayedJob := tube.delayed.Peek(); delayedJob != nil &&
+		delayedJob.Key() <= 0; delayedJob = tube.delayed.Peek() {
 		log.Debug("QUEUE delayed job got ready: ", delayedJob)
-		delayedJob = tube.Delayed.Dequeue()
+		delayedJob = tube.delayed.Dequeue()
 		delayedJob.(*Job).SetState(READY)
-		tube.Ready.Enqueue(delayedJob)
+		tube.ready.Enqueue(delayedJob)
 		if counter >= limit {
 			break
 		}
@@ -81,12 +101,12 @@ func (tube *Tube) ProcessDelayedQueue(limit int) {
 func (tube *Tube) ProcessReservedQueue(limit int) {
 	counter := 1
 	// reserved jobs are put to ready
-	for reservedJob := tube.Reserved.Peek(); reservedJob != nil &&
-		reservedJob.Key() <= 0; reservedJob = tube.Reserved.Peek() {
+	for reservedJob := tube.reserved.Peek(); reservedJob != nil &&
+		reservedJob.Key() <= 0; reservedJob = tube.reserved.Peek() {
 		// log.Println("QUEUE found reserved job thats ready: ", reservedJob)
-		reservedJob = tube.Reserved.Dequeue()
+		reservedJob = tube.reserved.Dequeue()
 		reservedJob.(*Job).SetState(READY)
-		tube.Ready.Enqueue(reservedJob)
+		tube.ready.Enqueue(reservedJob)
 		if counter >= limit {
 			break
 		}
@@ -100,15 +120,15 @@ func (tube *Tube) ProcessReservedQueue(limit int) {
 func (tube *Tube) ProcessReadyQueue(limit int) {
 	counter := 1
 	// ready jobs are sent
-	for tube.AwaitingClients.Peek() != nil && tube.Ready.Peek() != nil {
-		availableClientConnection := tube.AwaitingClients.Dequeue()
+	for tube.awaitingClients.Peek() != nil && tube.ready.Peek() != nil {
+		availableClientConnection := tube.awaitingClients.Dequeue()
 		client := availableClientConnection.(*AwaitingClient)
 		// log.Println("QUEUE sending job to client: ", client.id)
-		readyJob := tube.Ready.Dequeue().(*Job)
+		readyJob := tube.ready.Dequeue().(*Job)
 		client.Request.Job = *readyJob
 		client.SendChannel <- client.Request.Copy()
 		readyJob.SetState(RESERVED)
-		tube.Reserved.Enqueue(readyJob)
+		tube.reserved.Enqueue(readyJob)
 		if counter >= limit {
 			break
 		}
@@ -118,21 +138,78 @@ func (tube *Tube) ProcessReadyQueue(limit int) {
 
 // ProcessTimedClients reserves jobs for or times out the clients with a timeout
 func (tube *Tube) ProcessTimedClients() {
-	for id, client := range tube.AwaitingTimedClients {
+	for id, client := range tube.awaitingTimedClients {
 		// log.Println(client)
 		if client.Timeleft() <= 0 {
-			if tube.Ready.Peek() != nil {
-				readyJob := tube.Ready.Dequeue().(*Job)
+			if tube.ready.Peek() != nil {
+				readyJob := tube.ready.Dequeue().(*Job)
 				client.Request.Job = *readyJob
 				client.SendChannel <- client.Request.Copy()
 				readyJob.SetState(RESERVED)
-				tube.Reserved.Enqueue(readyJob)
+				tube.reserved.Enqueue(readyJob)
 			} else {
 				client.Request.Err = errors.New(TIMED_OUT)
 				client.SendChannel <- client.Request.Copy()
 			}
-			delete(tube.AwaitingTimedClients, id)
-			tube.AwaitingClients.Delete(id)
+			delete(tube.awaitingTimedClients, id)
+			tube.awaitingClients.Delete(id)
 		}
+	}
+}
+
+func (tube *Tube) Put(command *Command) {
+	if command.Job.State() == READY {
+		// log.Println("TUBE_HANDLER put job to ready queue: ", c, name)
+		tube.ready.Enqueue(&command.Job)
+	} else {
+		// log.Println("TUBE_HANDLER put job to delayed queue: ", c, name)
+		tube.delayed.Enqueue(&command.Job)
+	}
+	command.Err = nil
+	command.Params["id"] = command.Job.Id()
+}
+
+func (tube *Tube) Reserve(command *Command, sendChannel chan Command) {
+	tube.awaitingClients.Enqueue(NewAwaitingClient(*command, sendChannel))
+}
+
+func (tube *Tube) ReserveWithTimeout(command *Command, sendChannel chan Command) {
+	client := NewAwaitingClient(*command, sendChannel)
+	tube.awaitingClients.Enqueue(client)
+	tube.awaitingTimedClients[client.Id()] = client
+	tube.ProcessTimedClients()
+}
+
+func (tube *Tube) Delete(command *Command) {
+	if tube.buried.Delete(command.Params["id"]) != nil ||
+		tube.reserved.Delete(command.Params["id"]) != nil {
+		// log.Println("TUBE_HANDLER deleted job: ", c, name)
+		command.Err = nil
+	} else {
+		command.Err = errors.New(NOT_FOUND)
+	}
+}
+
+func (tube *Tube) Release(command *Command) {
+	item := tube.reserved.Delete(command.Params["id"])
+	if item != nil {
+		job := item.(*Job)
+		// log.Println("TUBE_HANDLER released job: ", c, name)
+		job.SetState(READY)
+		tube.ready.Enqueue(job)
+	} else {
+		command.Err = errors.New(NOT_FOUND)
+	}
+}
+
+func (tube *Tube) Bury(command *Command) {
+	item := tube.reserved.Delete(command.Params["id"])
+	if item != nil {
+		job := item.(*Job)
+		// log.Println("TUBE_HANDLER buried job: ", c, name)
+		job.SetState(BURIED)
+		tube.buried.Enqueue(job)
+	} else {
+		command.Err = errors.New(NOT_FOUND)
 	}
 }
