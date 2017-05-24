@@ -104,7 +104,7 @@ func initLogging(debugMode bool) {
 	backend1Leveled.SetLevel(logging.ERROR, "")
 
 	backend2Leveled := logging.AddModuleLevel(backend2Formatter)
-	if (debugMode) {
+	if debugMode {
 		backend2Leveled.SetLevel(logging.DEBUG, "")
 	} else {
 		backend2Leveled.SetLevel(logging.INFO, "")

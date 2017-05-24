@@ -53,12 +53,12 @@ type Tube struct {
 
 func NewTube(name string, priorityQueueCreator PriorityQueueCreator) *Tube {
 	tube := &Tube{
-		Name: name,
-		ready: priorityQueueCreator(),
-		reserved: priorityQueueCreator(),
-		delayed: priorityQueueCreator(),
-		buried: priorityQueueCreator(),
-		awaitingClients: priorityQueueCreator(),
+		Name:                 name,
+		ready:                priorityQueueCreator(),
+		reserved:             priorityQueueCreator(),
+		delayed:              priorityQueueCreator(),
+		buried:               priorityQueueCreator(),
+		awaitingClients:      priorityQueueCreator(),
 		awaitingTimedClients: make(map[string]*AwaitingClient),
 	}
 	tube.ready.Init()
@@ -169,18 +169,18 @@ func (tube *Tube) Put(command *Command) {
 	command.Params["id"] = command.Job.Id()
 }
 
-func (tube *Tube) Reserve(command *Command, sendChannel chan Command)  {
+func (tube *Tube) Reserve(command *Command, sendChannel chan Command) {
 	tube.awaitingClients.Enqueue(NewAwaitingClient(*command, sendChannel))
 }
 
-func (tube *Tube) ReserveWithTimeout(command *Command, sendChannel chan Command)  {
+func (tube *Tube) ReserveWithTimeout(command *Command, sendChannel chan Command) {
 	client := NewAwaitingClient(*command, sendChannel)
 	tube.awaitingClients.Enqueue(client)
 	tube.awaitingTimedClients[client.Id()] = client
 	tube.ProcessTimedClients()
 }
 
-func (tube *Tube) Delete(command *Command)  {
+func (tube *Tube) Delete(command *Command) {
 	if tube.buried.Delete(command.Params["id"]) != nil ||
 		tube.reserved.Delete(command.Params["id"]) != nil {
 		// log.Println("TUBE_HANDLER deleted job: ", c, name)
@@ -190,7 +190,7 @@ func (tube *Tube) Delete(command *Command)  {
 	}
 }
 
-func (tube *Tube) Release(command *Command)  {
+func (tube *Tube) Release(command *Command) {
 	item := tube.reserved.Delete(command.Params["id"])
 	if item != nil {
 		job := item.(*Job)
@@ -202,7 +202,7 @@ func (tube *Tube) Release(command *Command)  {
 	}
 }
 
-func (tube *Tube) Bury(command *Command)  {
+func (tube *Tube) Bury(command *Command) {
 	item := tube.reserved.Delete(command.Params["id"])
 	if item != nil {
 		job := item.(*Job)

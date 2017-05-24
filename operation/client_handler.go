@@ -126,7 +126,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
 	case architecture.IGNORE:
 		if _, ok := client.watchedTubeConnections[command.Params["tube"]]; ok &&
-				len(client.watchedTubeConnections) > 1 {
+			len(client.watchedTubeConnections) > 1 {
 			delete(client.watchedTubeConnections, command.Params["tube"])
 			command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
 		} else {
