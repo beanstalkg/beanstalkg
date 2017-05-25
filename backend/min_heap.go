@@ -2,11 +2,11 @@ package backend
 
 import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
-	"math"
 	//"os"
 	//"runtime/pprof"
-	"github.com/op/go-logging"
 	"time"
+
+	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
@@ -166,9 +166,8 @@ func (h *MinHeap) MinHeapify(i int) {
 	// log.Println("smallest=", smallest)
 	if smallest != i {
 		// log.Println("smallest=", smallest, ", i=", i)
-		temp := h.Store[i]
-		h.Store[i] = h.Store[smallest]
-		h.Store[smallest] = temp
+		h.Store[i], h.Store[smallest] = h.Store[smallest], h.Store[i]
+
 		h.MinHeapify(smallest)
 	}
 }
@@ -176,8 +175,7 @@ func (h *MinHeap) MinHeapify(i int) {
 func (h *MinHeap) Min() architecture.PriorityQueueItem {
 	if h.Size() > 0 {
 		return h.Store[0]
-	} else {
-		return nil
 	}
 
+	return nil
 }
