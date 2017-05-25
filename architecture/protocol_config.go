@@ -84,6 +84,7 @@ func init() {
 			ExpectedLength: 1,
 			WaitingForMore: false,
 			Params:         []string{},
+		},
 		KICK: {
 			Name:           KICK,
 			ExpectedLength: 2,
