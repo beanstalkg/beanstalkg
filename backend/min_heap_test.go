@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -74,22 +73,5 @@ func TestMinHeap_Delete(t *testing.T) {
 	m.Delete(testToDelete.Id())
 	if item := m.Find(testToDelete.Id()); item != nil {
 		t.Errorf("Deleted %s earlier, but still exists in heap; %s.", testToDelete.Id(), item.Id())
-	}
-}
-
-func TestIntegration(t *testing.T) {
-	tube := architecture.Tube{"test", &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, make(map[string]*architecture.AwaitingClient)}
-	//m.Enqueue(ownHeapItem{4, string(1)})
-	fmt.Println(tube)
-	tube.Delayed.Enqueue(ownHeapItem{4, string(1), time.Now().UnixNano()})
-	if tube.Delayed.Dequeue().Key() != 4 {
-		t.Error("invalid key")
-	}
-	fmt.Println(tube.Delayed)
-	if tube.Delayed.Find(string(1)) != nil {
-		t.Error("delayed.find failed")
-	}
-	if tube.Delayed.Dequeue() != nil {
-		t.Error("delayed.dequeue failed")
 	}
 }
