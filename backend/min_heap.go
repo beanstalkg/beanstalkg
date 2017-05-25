@@ -131,7 +131,7 @@ func (h *MinHeap) DecreaseKey(i int, item architecture.PriorityQueueItem) {
 }
 
 func (h *MinHeap) Parent(i int) int {
-	return int(math.Floor(float64(i / 2)))
+	return i >> 1
 }
 
 func (h *MinHeap) Left(i int) int {
