@@ -55,8 +55,7 @@ func (h *MinHeap) Init() {
 
 func (h *MinHeap) Enqueue(item architecture.PriorityQueueItem) {
 	// h.Size = h.Size + 1
-	h.Store = append(h.Store, ownHeapItem{math.MaxInt64, "-2", time.Now().UnixNano()})
-	h.DecreaseKey(h.Size()-1, item)
+	h.DecreaseKey(item)
 	item.Enqueued()
 }
 
@@ -114,18 +113,17 @@ func (h *MinHeap) Size() int {
 
 // +++++++++++++ END - PriorityQueue Interface methods +++++++++++++++++
 
-func (h *MinHeap) DecreaseKey(i int, item architecture.PriorityQueueItem) {
-	// log.Println("queue", h, i)
-	if item.Key() > h.Store[i].Key() {
-		log.Error(h, h.Store[i], item)
-		log.Fatal("new key can not be larger than the current")
-	}
-	h.Store[i] = item
-	//log.Println(h.Size, key)
+func (h *MinHeap) DecreaseKey(item architecture.PriorityQueueItem) {
+	// Index of next slot in slice.
+	i := h.Size()
+
+	h.Store = append(h.Store, item)
+
+	// Re-sort slice to put the new item in the proper place.
 	for i > 0 && h.Store[h.Parent(i)].Key() > h.Store[i].Key() {
-		temp := h.Store[i]
-		h.Store[i] = h.Store[h.Parent(i)]
-		h.Store[h.Parent(i)] = temp
+		// Swap item locationss.
+		h.Store[i], h.Store[h.Parent(i)] = h.Store[h.Parent(i)], h.Store[i]
+
 		i = h.Parent(i)
 	}
 }
