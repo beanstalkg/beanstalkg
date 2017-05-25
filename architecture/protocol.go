@@ -25,6 +25,7 @@ const (
 	RELEASE                          = "release"
 	BURY                             = "bury"
 	TOUCH                            = "touch"
+	QUIT                             = "quit"
 )
 
 const (
