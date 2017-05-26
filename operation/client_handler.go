@@ -162,6 +162,8 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		} else {
 			command.Err = errors.New(architecture.NOT_FOUND)
 		}
+	case architecture.KICK:
+		command = client.reserve(command)
 	case architecture.TOUCH:
 
 	}

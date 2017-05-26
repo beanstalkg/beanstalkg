@@ -27,6 +27,7 @@ func NewTubeHandler(
 				tube.Process()
 				tube.ProcessTimedClients()
 			case c := <-commands:
+				log.Info("tube handling ", c.Name)
 				switch c.Name {
 				case architecture.PUT:
 					if c.Job.State() == architecture.READY {
@@ -71,12 +72,15 @@ func NewTubeHandler(
 					}
 					commands <- c.Copy()
 				case architecture.BURY:
+					log.Info("buried ", c.Params["id"])
 					item := tube.Reserved.Delete(c.Params["id"])
 					if item != nil {
 						job := item.(*architecture.Job)
 						// log.Println("TUBE_HANDLER buried job: ", c, name)
 						job.SetState(architecture.BURIED)
 						tube.Buried.Enqueue(job)
+						size := tube.Buried.Size()
+						log.Info("buried size ", size)
 					} else {
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
@@ -84,14 +88,21 @@ func NewTubeHandler(
 				case architecture.KICK:
 					amount := 0
 					bound, err := strconv.Atoi(c.Params["bound"])
+					log.Info("kicking laa", bound)
 					if err != nil {
 						// handle non-integer number of jobs to kick
 					}
+					size := tube.Buried.Size()
+					log.Info("kicking buried size ", size)
+					if size < bound {
+						bound = size
+					}
 					for amount < bound {
+						log.Info("kicking laa ", amount)
 						item := tube.Buried.Dequeue()
 						job := item.(*architecture.Job)
 						job.SetState(architecture.READY)
-						tube.Ready.Enqueue(job)
+						tube.Reserved.Enqueue(job)
 						amount += 1
 					}
 					commands <- c.Copy()
