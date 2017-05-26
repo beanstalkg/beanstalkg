@@ -102,7 +102,7 @@ func NewTubeHandler(
 						item := tube.Buried.Dequeue()
 						job := item.(*architecture.Job)
 						job.SetState(architecture.READY)
-						tube.Reserved.Enqueue(job)
+						tube.Ready.Enqueue(job)
 						amount += 1
 					}
 					commands <- c.Copy()
