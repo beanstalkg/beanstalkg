@@ -78,7 +78,6 @@ func NewTubeHandler(
 						// log.Println("TUBE_HANDLER buried job: ", c, name)
 						job.SetState(architecture.BURIED)
 						tube.Buried.Enqueue(job)
-						size := tube.Buried.Size()
 					} else {
 						c.Err = errors.New(architecture.NOT_FOUND)
 					}
