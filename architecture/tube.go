@@ -216,21 +216,19 @@ func (tube *Tube) Bury(command *Command) {
 }
 
 func (tube *Tube) Kick(command *Command) {
-	amount := 0
 	bound, err := strconv.Atoi(command.Params["bound"])
 	if err != nil {
-		// handle non-integer number of jobs to kick
+		command.Err = errors.New(NOT_FOUND)
 	}
 	size := tube.buried.Size()
 	if size < bound {
 		bound = size
 	}
-	for amount < bound {
+	for amount := 0; amount < bound; amount++ {
 		item := tube.buried.Dequeue()
 		job := item.(*Job)
 		job.SetState(READY)
 		tube.ready.Enqueue(job)
-		amount += 1
 	}
 }
 
