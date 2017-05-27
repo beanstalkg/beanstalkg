@@ -70,5 +70,3 @@ jobs:
             docker build -t "beanstalkg:${CIRCLE_BRANCH}" .
             docker tag beanstalkg:$CIRCLE_BRANCH beanstalkg/beanstalkg:$CIRCLE_BRANCH
             docker push beanstalkg/beanstalkg:$CIRCLE_BRANCH
-
-

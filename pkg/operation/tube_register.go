@@ -1,7 +1,7 @@
 package operation
 
 import (
-	"github.com/vimukthi-git/beanstalkg/architecture"
+	"github.com/vimukthi-git/beanstalkg/pkg/architecture"
 )
 
 const DEFAULT_TUBE string = "default"

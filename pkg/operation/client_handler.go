@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"github.com/op/go-logging"
-	"github.com/vimukthi-git/beanstalkg/architecture"
+	"github.com/vimukthi-git/beanstalkg/pkg/architecture"
 	"net"
 	"reflect"
 	"strconv"
