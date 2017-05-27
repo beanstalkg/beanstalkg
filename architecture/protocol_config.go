@@ -69,7 +69,7 @@ func init() {
 		},
 		BURY: {
 			Name:           BURY,
-			ExpectedLength: 2,
+			ExpectedLength: 3,
 			WaitingForMore: false,
 			Params:         []string{"id", "pri"},
 		},
