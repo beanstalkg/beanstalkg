@@ -48,6 +48,12 @@ func NewTubeHandler(
 				case architecture.BURY:
 					tube.Bury(&incomingCommand)
 					commands <- incomingCommand.Copy()
+				case architecture.KICK:
+					tube.Kick(&incomingCommand)
+					commands <- incomingCommand.Copy()
+				case architecture.KICK_JOB:
+					tube.KickJob(&incomingCommand)
+					commands <- incomingCommand.Copy()
 				}
 			case <-stop:
 				ticker.Stop()

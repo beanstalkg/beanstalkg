@@ -79,6 +79,18 @@ func init() {
 			WaitingForMore: false,
 			Params:         []string{"id"},
 		},
+		KICK: {
+			Name:           KICK,
+			ExpectedLength: 2,
+			WaitingForMore: false,
+			Params:         []string{"bound"},
+		},
+		KICK_JOB: {
+			Name:           KICK_JOB,
+			ExpectedLength: 2,
+			WaitingForMore: false,
+			Params:         []string{"id"},
+		},
 	}
 
 	cmdReplyOptions = map[CommandName]CommandReplyOptions{
@@ -127,6 +139,18 @@ func init() {
 		TOUCH: {
 			Result:   false,
 			Message:  "INSERTED",
+			Param:    "",
+			UseJobID: true,
+		},
+		KICK: {
+			Result:   false,
+			Message:  "KICKED",
+			Param:    "",
+			UseJobID: false,
+		},
+		KICK_JOB: {
+			Result:   false,
+			Message:  "KICKED",
 			Param:    "",
 			UseJobID: true,
 		},

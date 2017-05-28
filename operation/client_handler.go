@@ -163,6 +163,12 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		} else {
 			command.Err = errors.New(architecture.NOT_FOUND)
 		}
+	case architecture.KICK_JOB:
+		client.usedTubeConnection <- command.Copy()
+		command = <-client.usedTubeConnection
+	case architecture.KICK:
+		client.usedTubeConnection <- command.Copy()
+		command = <-client.usedTubeConnection
 	case architecture.TOUCH:
 
 	}
