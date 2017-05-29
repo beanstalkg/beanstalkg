@@ -79,6 +79,12 @@ func init() {
 			WaitingForMore: false,
 			Params:         []string{"id"},
 		},
+		QUIT: {
+			Name:           QUIT,
+			ExpectedLength: 1,
+			WaitingForMore: false,
+			Params:         []string{},
+		},
 		KICK: {
 			Name:           KICK,
 			ExpectedLength: 2,

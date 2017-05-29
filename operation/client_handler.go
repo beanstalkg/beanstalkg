@@ -3,11 +3,12 @@ package operation
 import (
 	"bufio"
 	"errors"
-	"github.com/op/go-logging"
-	"github.com/vimukthi-git/beanstalkg/architecture"
 	"net"
 	"reflect"
 	"strconv"
+
+	"github.com/op/go-logging"
+	"github.com/vimukthi-git/beanstalkg/architecture"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
@@ -171,6 +172,8 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		command = <-client.usedTubeConnection
 	case architecture.TOUCH:
 
+	case architecture.QUIT:
+		client.conn.Close()
 	}
 
 	return command
