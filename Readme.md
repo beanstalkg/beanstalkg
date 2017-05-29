@@ -1,4 +1,4 @@
-## Beanstalkg [![CircleCI](https://circleci.com/gh/vimukthi-git/beanstalkg.svg?style=svg)](https://circleci.com/gh/vimukthi-git/beanstalkg)
+## Beanstalkg [![CircleCI](https://circleci.com/gh/vimukthi-git/beanstalkg.svg?style=svg)](https://circleci.com/gh/vimukthi-git/beanstalkg) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/beanstalkg-chat/Lobby)
 
 Beanstalkg is a go implementation of [Beanstalkd](https://github.com/kr/beanstalkd) **a fast, general-purpose work queue**. 
 Idea is to support the same set of features and protocol with the addition of

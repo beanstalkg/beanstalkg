@@ -26,6 +26,8 @@ const (
 	BURY                             = "bury"
 	TOUCH                            = "touch"
 	QUIT                             = "quit"
+	KICK                             = "kick"
+	KICK_JOB                         = "kick-job"
 )
 
 const (

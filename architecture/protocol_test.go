@@ -42,4 +42,14 @@ func TestCommand_Parse(t *testing.T) {
 		fmt.Println("Sixth")
 		t.Fail()
 	}
+
+	c = Command{}
+	kicked, err := c.Parse("kick 4")
+	if err != nil {
+		t.Fail()
+	}
+	if !kicked {
+		fmt.Println("failed to kicked")
+		t.Fail()
+	}
 }

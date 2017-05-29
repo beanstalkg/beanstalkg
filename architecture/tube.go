@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/op/go-logging"
 	"time"
+	"strconv"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
@@ -209,6 +210,34 @@ func (tube *Tube) Bury(command *Command) {
 		// log.Println("TUBE_HANDLER buried job: ", c, name)
 		job.SetState(BURIED)
 		tube.buried.Enqueue(job)
+	} else {
+		command.Err = errors.New(NOT_FOUND)
+	}
+}
+
+func (tube *Tube) Kick(command *Command) {
+	bound, err := strconv.Atoi(command.Params["bound"])
+	if err != nil {
+		command.Err = errors.New(NOT_FOUND)
+	}
+	size := tube.buried.Size()
+	if size < bound {
+		bound = size
+	}
+	for amount := 0; amount < bound; amount++ {
+		item := tube.buried.Dequeue()
+		job := item.(*Job)
+		job.SetState(READY)
+		tube.ready.Enqueue(job)
+	}
+}
+
+func (tube *Tube) KickJob(command *Command) {
+	item := tube.buried.Delete(command.Params["id"])
+	if item != nil {
+		job := item.(*Job)
+		job.SetState(READY)
+		tube.ready.Enqueue(job)
 	} else {
 		command.Err = errors.New(NOT_FOUND)
 	}
