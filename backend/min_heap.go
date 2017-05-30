@@ -50,18 +50,17 @@ func (h *MinHeap) Dequeue() architecture.PriorityQueueItem {
 }
 
 func (h *MinHeap) Find(id string) architecture.PriorityQueueItem {
-	for i := 0; i < h.Size(); i++ {
-		if h.Store[i].Id() == id {
-			return h.Store[i]
+	for _, item := range h.Store {
+		if item.Id() == id {
+			return item
 		}
 	}
 	return nil
 }
 
 func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
-	for i := 0; i < h.Size(); i++ {
-		if h.Store[i].Id() == id {
-			temp := h.Store[i]
+	for i, item := range h.Store {
+		if item.Id() == id {
 			if len(h.Store) == 1 {
 				h.Store = nil
 			} else {
@@ -69,7 +68,7 @@ func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
 				h.Store = append(h.Store[:i], h.Store[i+1:]...)
 				h.MinHeapify(i)
 			}
-			return temp
+			return item
 		}
 	}
 
