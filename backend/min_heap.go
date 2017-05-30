@@ -116,17 +116,17 @@ func (h *MinHeap) MinHeapify(i int) {
 	// log.Println("r=", r)
 	smallest := i
 	if l < h.Size() {
-		if h.Store[l].Key() < h.Store[i].Key() ||
-			(h.Store[l].Key() == h.Store[i].Key() &&
-				h.Store[l].Timestamp() < h.Store[i].Timestamp()) {
+		if left, parent := h.Store[l], h.Store[i]; left.Key() < parent.Key() ||
+			(left.Key() == parent.Key() &&
+				left.Timestamp() < parent.Timestamp()) {
 			// log.Println("l=", l, h.Store[l].Timestamp())
 			smallest = l
 		}
 	}
 	if r < h.Size() {
-		if h.Store[r].Key() < h.Store[smallest].Key() ||
-			(h.Store[r].Key() == h.Store[smallest].Key() &&
-				h.Store[r].Timestamp() < h.Store[smallest].Timestamp()) {
+		if right, parent := h.Store[r], h.Store[smallest]; right.Key() < parent.Key() ||
+			(right.Key() == parent.Key() &&
+				right.Timestamp() < parent.Timestamp()) {
 			// log.Println("r=", r, h.Store[r].Timestamp())
 			smallest = r
 		}
