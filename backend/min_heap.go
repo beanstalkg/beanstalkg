@@ -4,42 +4,11 @@ import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
 	//"os"
 	//"runtime/pprof"
-	"time"
 
 	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
-
-/**
-+++++ MIN HEAP BACKEND ++++++
-Dont want to use built in Heap for now. Easy to do optimizations
-*/
-
-type ownHeapItem struct {
-	key       int64
-	id        string
-	timestamp int64
-}
-
-func (t ownHeapItem) Key() int64 {
-	return t.key
-}
-
-func (t ownHeapItem) Id() string {
-	return t.id
-}
-
-func (t ownHeapItem) Timestamp() int64 {
-	return t.timestamp
-}
-
-func (t ownHeapItem) Enqueued() {
-	t.timestamp = time.Now().UnixNano()
-}
-
-func (t ownHeapItem) Dequeued() {
-}
 
 type MinHeap struct {
 	Store []architecture.PriorityQueueItem
