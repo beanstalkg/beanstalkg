@@ -1,9 +1,14 @@
 package architecture
 
+import (
+	"strconv"
+)
+
 type CommandParseOptions struct {
 	ExpectedLength int
 	WaitingForMore bool
 	Params         []string
+	ParamValidators []interface{}
 	Name           CommandName
 }
 
@@ -17,19 +22,30 @@ type CommandReplyOptions struct {
 var cmdParseOptions map[CommandName]CommandParseOptions
 var cmdReplyOptions map[CommandName]CommandReplyOptions
 
+func identity(argument string) string { return argument }
+
 func init() {
+
+	funcs := make([]interface{}, 1)
+	funcs = []interface{}{ identity }
+
+	funcs2 := make([]interface{}, 4)
+	funcs2 = []interface{}{ strconv.Atoi, strconv.Atoi, strconv.Atoi, strconv.Atoi }
+
 	cmdParseOptions = map[CommandName]CommandParseOptions{
 		USE: {
 			Name:           USE,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"tube"},
+			ParamValidators: funcs,
 		},
 		PUT: {
 			Name:           PUT,
 			ExpectedLength: 5,
 			WaitingForMore: true,
 			Params:         []string{"pri", "delay", "ttr", "bytes"},
+			ParamValidators: funcs2,
 		},
 		WATCH: {
 			Name:           WATCH,
@@ -78,12 +94,6 @@ func init() {
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
-		},
-		QUIT: {
-			Name:           QUIT,
-			ExpectedLength: 1,
-			WaitingForMore: false,
-			Params:         []string{},
 		},
 		KICK: {
 			Name:           KICK,
