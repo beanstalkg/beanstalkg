@@ -147,6 +147,16 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 			return true, command.Err
 		}
 
+		// Check if parameter types are correct
+		for i, _ := range opts.Params {
+			if opts.ParamInteger[i] {
+				_, err := strconv.Atoi(parts[i+1])
+				if err != nil {
+					command.Err = errors.New(BAD_FORMAT)
+				}
+			}
+		}
+
 		// Store command info.  For future logging, maybe?
 		command.Params = map[string]string{}
 		command.RawCommand = rawCommand
