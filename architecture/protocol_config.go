@@ -90,6 +90,13 @@ func init() {
 			Params:         []string{"id"},
 			ParamInteger:   []bool{ false },
 		},
+		QUIT: {
+			Name:           QUIT,
+			ExpectedLength: 1,
+			WaitingForMore: false,
+			Params:         []string{},
+			ParamInteger:   []bool{},
+		},
 		KICK: {
 			Name:           KICK,
 			ExpectedLength: 2,
