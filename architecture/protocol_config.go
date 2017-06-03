@@ -22,13 +22,6 @@ type CommandReplyOptions struct {
 var cmdParseOptions map[CommandName]CommandParseOptions
 var cmdReplyOptions map[CommandName]CommandReplyOptions
 
-func identity(argument string) string { return argument }
-func initializer(arguments []interface{}) []interface{} {
-	result := make([]interface{}, len(arguments))
-	result = arguments
-	return result
-}
-
 func init() {
 	cmdParseOptions = map[CommandName]CommandParseOptions{
 		USE: {
@@ -36,84 +29,84 @@ func init() {
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"tube"},
-			ParamValidators: initializer( []interface{}{ identity } ),
+			ParamValidators: []interface{}{ strconv.Atoi },
 		},
 		PUT: {
 			Name:           PUT,
 			ExpectedLength: 5,
 			WaitingForMore: true,
 			Params:         []string{"pri", "delay", "ttr", "bytes"},
-			ParamValidators: initializer( []interface{}{ strconv.Atoi, strconv.Atoi, strconv.Atoi, strconv.Atoi } ),
+			ParamValidators: []interface{}{ strconv.Atoi, strconv.Atoi, strconv.Atoi, strconv.Atoi },
 		},
 		WATCH: {
 			Name:           WATCH,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"tube"},
-			ParamValidators: initializer( []interface{}{ identity } ),
+			ParamValidators: []interface{}{ nil },
 		},
 		IGNORE: {
 			Name:           IGNORE,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"tube"},
-			ParamValidators: initializer( []interface{}{ identity } ),
+			ParamValidators: []interface{}{ nil },
 		},
 		RESERVE: {
 			Name:           RESERVE,
 			ExpectedLength: 1,
 			WaitingForMore: false,
 			Params:         []string{},
-			ParamValidators: initializer( []interface{}{} ),
+			ParamValidators: []interface{}{},
 		},
 		RESERVE_WITH_TIMEOUT: {
 			Name:           RESERVE_WITH_TIMEOUT,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"timeout"},
-			ParamValidators: initializer( []interface{}{ strconv.Atoi } ),
+			ParamValidators: []interface{}{ strconv.Atoi },
 		},
 		DELETE: {
 			Name:           DELETE,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
-			ParamValidators: initializer( []interface{}{ identity } ),
+			ParamValidators: []interface{}{ nil },
 		},
 		RELEASE: {
 			Name:           RELEASE,
 			ExpectedLength: 4,
 			WaitingForMore: false,
 			Params:         []string{"id", "pri", "delay"},
-			ParamValidators: initializer( []interface{}{ identity, strconv.Atoi, strconv.Atoi } ),
+			ParamValidators: []interface{}{ nil, strconv.Atoi, strconv.Atoi },
 		},
 		BURY: {
 			Name:           BURY,
 			ExpectedLength: 3,
 			WaitingForMore: false,
 			Params:         []string{"id", "pri"},
-			ParamValidators: initializer( []interface{}{ identity, strconv.Atoi } ),
+			ParamValidators: []interface{}{ nil, strconv.Atoi },
 		},
 		TOUCH: {
 			Name:           TOUCH,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
-			ParamValidators: initializer( []interface{}{ identity } ),
+			ParamValidators: []interface{}{ nil },
 		},
 		KICK: {
 			Name:           KICK,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"bound"},
-			ParamValidators: initializer( []interface{}{ strconv.Atoi } ),
+			ParamValidators: []interface{}{ strconv.Atoi },
 		},
 		KICK_JOB: {
 			Name:           KICK_JOB,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
-			ParamValidators: initializer( []interface{}{ identity } ),
+			ParamValidators: []interface{}{ nil },
 		},
 	}
 
