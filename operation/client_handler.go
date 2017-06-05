@@ -5,10 +5,9 @@ import (
 	"errors"
 	"net"
 	"reflect"
-	"strconv"
 
+	"github.com/beanstalkg/beanstalkg/architecture"
 	"github.com/op/go-logging"
-	"github.com/vimukthi-git/beanstalkg/architecture"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
@@ -117,19 +116,19 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		// send command to tube register
 		client.registerConnection <- command.Copy()
 		client.usedTubeConnection = <-client.tubeConnectionReceiver
-		log.Info("CLIENT_HANDLER started using tube: ", command.Params["tube"])
+		log.Info("CLIENT_HANDLER started using tube: ", command.Tube)
 	case architecture.PUT:
 		client.usedTubeConnection <- command.Copy() // send the command to tube
 		command = <-client.usedTubeConnection       // get the response
 	case architecture.WATCH:
 		client.registerConnection <- command.Copy()
-		client.watchedTubeConnections[command.Params["tube"]] = <-client.tubeConnectionReceiver
-		command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
+		client.watchedTubeConnections[command.Tube] = <-client.tubeConnectionReceiver
+		command.Count = int64(len(client.watchedTubeConnections))
 	case architecture.IGNORE:
-		if _, ok := client.watchedTubeConnections[command.Params["tube"]]; ok &&
+		if _, ok := client.watchedTubeConnections[command.Tube]; ok &&
 			len(client.watchedTubeConnections) > 1 {
-			delete(client.watchedTubeConnections, command.Params["tube"])
-			command.Params["count"] = strconv.FormatInt(int64(len(client.watchedTubeConnections)), 10)
+			delete(client.watchedTubeConnections, command.Tube)
+			command.Count = int64(len(client.watchedTubeConnections))
 		} else {
 			command.Err = errors.New(architecture.NOT_IGNORED)
 		}
@@ -138,7 +137,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 	case architecture.RESERVE_WITH_TIMEOUT:
 		command = client.reserve(command)
 	case architecture.DELETE:
-		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
+		if tube, ok := client.reservedJobs[command.ID]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
 				con <- command.Copy()
 				command = <-con
@@ -147,7 +146,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 			command.Err = errors.New(architecture.NOT_FOUND)
 		}
 	case architecture.RELEASE:
-		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
+		if tube, ok := client.reservedJobs[command.ID]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
 				con <- command
 				command = <-con
@@ -156,7 +155,7 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 			command.Err = errors.New(architecture.NOT_FOUND)
 		}
 	case architecture.BURY:
-		if tube, ok := client.reservedJobs[command.Params["id"]]; ok {
+		if tube, ok := client.reservedJobs[command.ID]; ok {
 			if con, ok := client.watchedTubeConnections[tube]; ok {
 				con <- command.Copy()
 				command = <-con
@@ -195,7 +194,7 @@ func (client *clientHandler) reserve(command architecture.Command) architecture.
 	}
 	chosen, value, _ := reflect.Select(cases)
 	resultCommand := value.Interface().(architecture.Command)
-	resultCommand.Params["tube"] = receiveConnectionNames[chosen]
-	client.reservedJobs[resultCommand.Job.Id()] = resultCommand.Params["tube"]
+	resultCommand.Tube = receiveConnectionNames[chosen]
+	client.reservedJobs[resultCommand.Job.Id()] = resultCommand.Tube
 	return resultCommand
 }

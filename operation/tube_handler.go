@@ -1,8 +1,8 @@
 package operation
 
 import (
-	"github.com/vimukthi-git/beanstalkg/architecture"
-	"github.com/vimukthi-git/beanstalkg/backend"
+	"github.com/beanstalkg/beanstalkg/architecture"
+	"github.com/beanstalkg/beanstalkg/backend"
 	"time"
 )
 

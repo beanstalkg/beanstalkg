@@ -2,9 +2,9 @@ package architecture
 
 import (
 	"errors"
-	"github.com/op/go-logging"
 	"time"
-	"strconv"
+
+	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
@@ -167,7 +167,6 @@ func (tube *Tube) Put(command *Command) {
 		tube.delayed.Enqueue(&command.Job)
 	}
 	command.Err = nil
-	command.Params["id"] = command.Job.Id()
 }
 
 func (tube *Tube) Reserve(command *Command, sendChannel chan Command) {
@@ -182,8 +181,8 @@ func (tube *Tube) ReserveWithTimeout(command *Command, sendChannel chan Command)
 }
 
 func (tube *Tube) Delete(command *Command) {
-	if tube.buried.Delete(command.Params["id"]) != nil ||
-		tube.reserved.Delete(command.Params["id"]) != nil {
+	if tube.buried.Delete(command.ID) != nil ||
+		tube.reserved.Delete(command.ID) != nil {
 		// log.Println("TUBE_HANDLER deleted job: ", c, name)
 		command.Err = nil
 	} else {
@@ -192,7 +191,7 @@ func (tube *Tube) Delete(command *Command) {
 }
 
 func (tube *Tube) Release(command *Command) {
-	item := tube.reserved.Delete(command.Params["id"])
+	item := tube.reserved.Delete(command.ID)
 	if item != nil {
 		job := item.(*Job)
 		// log.Println("TUBE_HANDLER released job: ", c, name)
@@ -204,7 +203,7 @@ func (tube *Tube) Release(command *Command) {
 }
 
 func (tube *Tube) Bury(command *Command) {
-	item := tube.reserved.Delete(command.Params["id"])
+	item := tube.reserved.Delete(command.ID)
 	if item != nil {
 		job := item.(*Job)
 		// log.Println("TUBE_HANDLER buried job: ", c, name)
@@ -216,10 +215,7 @@ func (tube *Tube) Bury(command *Command) {
 }
 
 func (tube *Tube) Kick(command *Command) {
-	bound, err := strconv.Atoi(command.Params["bound"])
-	if err != nil {
-		command.Err = errors.New(NOT_FOUND)
-	}
+	bound := int(command.Bound)
 	size := tube.buried.Size()
 	if size < bound {
 		bound = size
@@ -233,7 +229,7 @@ func (tube *Tube) Kick(command *Command) {
 }
 
 func (tube *Tube) KickJob(command *Command) {
-	item := tube.buried.Delete(command.Params["id"])
+	item := tube.buried.Delete(command.ID)
 	if item != nil {
 		job := item.(*Job)
 		job.SetState(READY)

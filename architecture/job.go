@@ -1,7 +1,6 @@
 package architecture
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/satori/go.uuid"
@@ -152,13 +151,8 @@ func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClien
 	a.SendChannel = sendChannel
 	a.QueuedAt = time.Now().UnixNano()
 	a.Timeout = -1
-	if _, ok := request.Params["timeout"]; ok {
-		timeout, err := strconv.ParseInt(request.Params["timeout"], 10, 0)
-		if err == nil {
-			a.Timeout = timeout * NANO // convert to nano seconds
-		} else {
-			log.Error(err)
-		}
+	if request.Timeout > 0 {
+		a.Timeout = request.Timeout * NANO // convert to nano seconds
 	}
 	// log.Println(a)
 	return a

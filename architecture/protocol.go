@@ -7,7 +7,6 @@ import (
 
 	"github.com/satori/go.uuid"
 	// "log"
-	"strconv"
 )
 
 // TODO extract protocol error messages into a error helper
@@ -45,78 +44,70 @@ const MAX_JOB_SIZE int64 = 65536 // 2^16
 type Command struct {
 	Name           CommandName
 	RawCommand     string
-	Params         map[string]string
 	WaitingForMore bool
 	MoreToSend     bool
 	Err            error
 	Job            Job
+
+	Tube     string
+	ID       string
+	Priority int64
+	Delay    int64
+	TTR      int64
+	Bytes    int64
+	Timeout  int64
+	Bound    int64
+	Count    int64
 }
 
 func NewCommand() Command {
 	return Command{
 		MoreToSend: false,
-		Params:     map[string]string{},
 	}
 }
 
 func NewDefaultCommand() Command {
 	return Command{
-		Name:       USE,
-		RawCommand: "use default",
-		Params: map[string]string{
-			"tube": "default",
-		},
+		Name:           USE,
+		RawCommand:     "use default",
 		WaitingForMore: false,
 	}
 }
 
 func (command *Command) Copy() Command {
-	paramsCopy := map[string]string{}
-	for k, v := range command.Params {
-		paramsCopy[k] = v
-	}
 	return Command{
 		Name:           command.Name,
 		RawCommand:     command.RawCommand,
-		Params:         paramsCopy,
 		WaitingForMore: command.WaitingForMore,
 		MoreToSend:     command.MoreToSend,
 		Err:            command.Err,
 		Job:            command.Job,
+		Tube:           command.Tube,
+		ID:             command.ID,
+		Priority:       command.Priority,
+		Delay:          command.Delay,
+		TTR:            command.TTR,
+		Bytes:          command.Bytes,
+		Timeout:        command.Timeout,
+		Bound:          command.Bound,
 	}
 }
 
-func (command *Command) createJobFromParams() error {
-	pri, e1 := strconv.ParseInt(command.Params["pri"], 10, 0)
-	if e1 != nil {
-		return errors.New(BAD_FORMAT)
-	}
-	delay, e2 := strconv.ParseInt(command.Params["delay"], 10, 0)
-	if e2 != nil {
-		return errors.New(BAD_FORMAT)
-	}
-	ttr, e3 := strconv.ParseInt(command.Params["ttr"], 10, 0)
-	if e3 != nil {
-		return errors.New(BAD_FORMAT)
-	}
-	bytes, e4 := strconv.ParseInt(command.Params["bytes"], 10, 0)
-	if e4 != nil {
-		return errors.New(BAD_FORMAT)
-	}
-
+func (command *Command) createJobFromParams(payload string) error {
+	bytes := command.Bytes
 	if bytes > MAX_JOB_SIZE {
 		return errors.New(JOB_TOO_BIG)
-	} else if bytes != int64(len(command.Params["data"])) {
+	} else if bytes != int64(len(payload)) {
 		return errors.New(EXPECTED_CRLF)
 	}
 
 	command.Job = *NewJob(
 		uuid.NewV1().String(),
-		pri,
-		delay,
-		ttr,
-		bytes,
-		command.Params["data"],
+		command.Priority,
+		command.Delay,
+		command.TTR,
+		command.Bytes,
+		payload,
 	)
 	// log.Println("PROTOCOL new job: ", command.Job)
 	return nil
@@ -148,12 +139,13 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 		}
 
 		// Store command info.  For future logging, maybe?
-		command.Params = map[string]string{}
 		command.RawCommand = rawCommand
-		for i, paramName := range opts.Params {
-			command.Params[paramName] = parts[i+1]
-		}
 		command.WaitingForMore = opts.WaitingForMore
+		for i, setterFunc := range opts.Params {
+			if err := setterFunc(command, parts[i+1]); err != nil {
+				return !command.WaitingForMore, err
+			}
+		}
 		log.Debug("PROTOCOL command after parsing ", command)
 
 		return !command.WaitingForMore, nil
@@ -162,9 +154,8 @@ func (command *Command) Parse(rawCommand string) (bool, error) {
 	// second round; PUT is the only valid command when WaitingForMore.
 	// log.Println("GOT MORE", command)
 	if command.Name == PUT {
-		command.Params["data"] = rawCommand
 		command.RawCommand += ("\r\n" + rawCommand)
-		err := command.createJobFromParams()
+		err := command.createJobFromParams(rawCommand)
 		// log.Println("GOT MORE PUT", c, err)
 		command.Err = err
 		return true, err
@@ -189,17 +180,21 @@ func (command *Command) Reply() (bool, string) {
 			}
 
 			// USE, WATCH, IGNORE
-			return false, strings.Join([]string{opts.Message, command.Params[opts.Param]}, " ")
+			if getter, ok := cmdGetterFuncs[opts.Param]; ok {
+				return false, strings.Join([]string{opts.Message, getter(command)}, " ")
+			}
+
+			return false, opts.Message
 		}
 
 		// PUT, TOUCH
-		return false, strings.Join([]string{opts.Message, command.Job.Id()}, " ")
+		return false, strings.Join([]string{opts.Message, command.ID}, " ")
 	}
 
 	// RESERVE, RESERVE_WITH_TIMEOUT
 	if !command.MoreToSend {
 		command.MoreToSend = true
-		return true, fmt.Sprintf("RESERVED %s %d", command.Job.Id(), command.Job.Bytes)
+		return true, fmt.Sprintf("RESERVED %s %d", command.ID, command.Job.Bytes)
 	}
 
 	return false, command.Job.Data
