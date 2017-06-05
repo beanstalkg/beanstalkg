@@ -31,14 +31,14 @@ func TestCommand_Parse(t *testing.T) {
 		t.Fail()
 	}
 
-	if c.Name != "put" || c.Params["ttr"] != "3" {
+	if c.Name != "put" || c.TTR != 3 {
 		fmt.Println("Fifth")
 		t.Fail()
 	}
 
 	c.Parse("data")
 
-	if c.Params["data"] != "data" {
+	if c.Job.Data != "data" {
 		fmt.Println("Sixth")
 		t.Fail()
 	}
