@@ -1,7 +1,7 @@
 package backend
 
 import (
-	"github.com/vimukthi-git/beanstalkg/architecture"
+	"github.com/beanstalkg/beanstalkg/architecture"
 	//"os"
 	//"runtime/pprof"
 
