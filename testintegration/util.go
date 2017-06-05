@@ -12,10 +12,7 @@ import (
 	"time"
 )
 
-// A Conn represents a connection to a beanstalkd server. It consists
-// of a default Tube and TubeSet as well as the underlying network
-// connection. The embedded types carry methods with them; see the
-// documentation of those types for details.
+// A Conn represents a connection to a beanstalkd server.
 type Conn struct {
 	c *textproto.Conn
 }
