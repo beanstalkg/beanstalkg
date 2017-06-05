@@ -25,10 +25,10 @@ func (tr *TubeRegister) init() {
 			case architecture.USE:
 				fallthrough
 			case architecture.WATCH:
-				tr.createTubeIfNotExists(c.Params["tube"])
+				tr.createTubeIfNotExists(c.Tube)
 				// send the tube connection to the client
-				tr.useTubeConnectionReceiver <- tr.tubeChannels[c.Params["tube"]]
-				log.Debugf("TUBE_REGISTER sent tube for %s: %s", c.Name, c.Params["tube"])
+				tr.useTubeConnectionReceiver <- tr.tubeChannels[c.Tube]
+				log.Debugf("TUBE_REGISTER sent tube for %s: %s", c.Name, c.Tube)
 			}
 		case <-tr.stop:
 			// TODO send stop signal to all tube channels
