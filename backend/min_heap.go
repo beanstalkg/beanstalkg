@@ -2,44 +2,13 @@ package backend
 
 import (
 	"github.com/vimukthi-git/beanstalkg/architecture"
-	"math"
 	//"os"
 	//"runtime/pprof"
+
 	"github.com/op/go-logging"
-	"time"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
-
-/**
-+++++ MIN HEAP BACKEND ++++++
-Dont want to use built in Heap for now. Easy to do optimizations
-*/
-
-type ownHeapItem struct {
-	key       int64
-	id        string
-	timestamp int64
-}
-
-func (t ownHeapItem) Key() int64 {
-	return t.key
-}
-
-func (t ownHeapItem) Id() string {
-	return t.id
-}
-
-func (t ownHeapItem) Timestamp() int64 {
-	return t.timestamp
-}
-
-func (t ownHeapItem) Enqueued() {
-	t.timestamp = time.Now().UnixNano()
-}
-
-func (t ownHeapItem) Dequeued() {
-}
 
 type MinHeap struct {
 	Store []architecture.PriorityQueueItem
@@ -55,8 +24,7 @@ func (h *MinHeap) Init() {
 
 func (h *MinHeap) Enqueue(item architecture.PriorityQueueItem) {
 	// h.Size = h.Size + 1
-	h.Store = append(h.Store, ownHeapItem{math.MaxInt64, "-2", time.Now().UnixNano()})
-	h.DecreaseKey(h.Size()-1, item)
+	h.DecreaseKey(item)
 	item.Enqueued()
 }
 
@@ -82,18 +50,17 @@ func (h *MinHeap) Dequeue() architecture.PriorityQueueItem {
 }
 
 func (h *MinHeap) Find(id string) architecture.PriorityQueueItem {
-	for i := 0; i < h.Size(); i++ {
-		if h.Store[i].Id() == id {
-			return h.Store[i]
+	for _, item := range h.Store {
+		if item.Id() == id {
+			return item
 		}
 	}
 	return nil
 }
 
 func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
-	for i := 0; i < h.Size(); i++ {
-		if h.Store[i].Id() == id {
-			temp := h.Store[i]
+	for i, item := range h.Store {
+		if item.Id() == id {
 			if len(h.Store) == 1 {
 				h.Store = nil
 			} else {
@@ -101,7 +68,7 @@ func (h *MinHeap) Delete(id string) architecture.PriorityQueueItem {
 				h.Store = append(h.Store[:i], h.Store[i+1:]...)
 				h.MinHeapify(i)
 			}
-			return temp
+			return item
 		}
 	}
 
@@ -114,24 +81,23 @@ func (h *MinHeap) Size() int {
 
 // +++++++++++++ END - PriorityQueue Interface methods +++++++++++++++++
 
-func (h *MinHeap) DecreaseKey(i int, item architecture.PriorityQueueItem) {
-	// log.Println("queue", h, i)
-	if item.Key() > h.Store[i].Key() {
-		log.Error(h, h.Store[i], item)
-		log.Fatal("new key can not be larger than the current")
-	}
-	h.Store[i] = item
-	//log.Println(h.Size, key)
+func (h *MinHeap) DecreaseKey(item architecture.PriorityQueueItem) {
+	// Index of next slot in slice.
+	i := h.Size()
+
+	h.Store = append(h.Store, item)
+
+	// Re-sort slice to put the new item in the proper place.
 	for i > 0 && h.Store[h.Parent(i)].Key() > h.Store[i].Key() {
-		temp := h.Store[i]
-		h.Store[i] = h.Store[h.Parent(i)]
-		h.Store[h.Parent(i)] = temp
+		// Swap item locationss.
+		h.Store[i], h.Store[h.Parent(i)] = h.Store[h.Parent(i)], h.Store[i]
+
 		i = h.Parent(i)
 	}
 }
 
 func (h *MinHeap) Parent(i int) int {
-	return int(math.Floor(float64(i / 2)))
+	return i >> 1
 }
 
 func (h *MinHeap) Left(i int) int {
@@ -150,17 +116,17 @@ func (h *MinHeap) MinHeapify(i int) {
 	// log.Println("r=", r)
 	smallest := i
 	if l < h.Size() {
-		if h.Store[l].Key() < h.Store[i].Key() ||
-			(h.Store[l].Key() == h.Store[i].Key() &&
-				h.Store[l].Timestamp() < h.Store[i].Timestamp()) {
+		if left, parent := h.Store[l], h.Store[i]; left.Key() < parent.Key() ||
+			(left.Key() == parent.Key() &&
+				left.Timestamp() < parent.Timestamp()) {
 			// log.Println("l=", l, h.Store[l].Timestamp())
 			smallest = l
 		}
 	}
 	if r < h.Size() {
-		if h.Store[r].Key() < h.Store[smallest].Key() ||
-			(h.Store[r].Key() == h.Store[smallest].Key() &&
-				h.Store[r].Timestamp() < h.Store[smallest].Timestamp()) {
+		if right, parent := h.Store[r], h.Store[smallest]; right.Key() < parent.Key() ||
+			(right.Key() == parent.Key() &&
+				right.Timestamp() < parent.Timestamp()) {
 			// log.Println("r=", r, h.Store[r].Timestamp())
 			smallest = r
 		}
@@ -168,9 +134,8 @@ func (h *MinHeap) MinHeapify(i int) {
 	// log.Println("smallest=", smallest)
 	if smallest != i {
 		// log.Println("smallest=", smallest, ", i=", i)
-		temp := h.Store[i]
-		h.Store[i] = h.Store[smallest]
-		h.Store[smallest] = temp
+		h.Store[i], h.Store[smallest] = h.Store[smallest], h.Store[i]
+
 		h.MinHeapify(smallest)
 	}
 }
@@ -178,8 +143,7 @@ func (h *MinHeap) MinHeapify(i int) {
 func (h *MinHeap) Min() architecture.PriorityQueueItem {
 	if h.Size() > 0 {
 		return h.Store[0]
-	} else {
-		return nil
 	}
 
+	return nil
 }
