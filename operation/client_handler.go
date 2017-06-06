@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/op/go-logging"
-	"github.com/vimukthi-git/beanstalkg/architecture"
+	"github.com/beanstalkg/beanstalkg/architecture"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
