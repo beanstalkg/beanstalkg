@@ -2,9 +2,11 @@ package architecture
 
 import (
 	"errors"
-	"github.com/op/go-logging"
-	"time"
 	"strconv"
+	"time"
+
+	"github.com/op/go-logging"
+	"github.com/vimukthi-git/beanstalkg/backend"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
@@ -50,6 +52,7 @@ type Tube struct {
 	buried               PriorityQueue
 	awaitingClients      PriorityQueue
 	awaitingTimedClients map[string]*AwaitingClient
+	db                   backend.Persister
 }
 
 func NewTube(name string, priorityQueueCreator PriorityQueueCreator) *Tube {
@@ -159,15 +162,20 @@ func (tube *Tube) ProcessTimedClients() {
 }
 
 func (tube *Tube) Put(command *Command) {
-	if command.Job.State() == READY {
+	job := command.Job
+	if db := tube.db; db != nil {
+		db.Put(job, tube)
+	}
+
+	if job.State() == READY {
 		// log.Println("TUBE_HANDLER put job to ready queue: ", c, name)
-		tube.ready.Enqueue(&command.Job)
+		tube.ready.Enqueue(&job)
 	} else {
 		// log.Println("TUBE_HANDLER put job to delayed queue: ", c, name)
-		tube.delayed.Enqueue(&command.Job)
+		tube.delayed.Enqueue(&job)
 	}
 	command.Err = nil
-	command.Params["id"] = command.Job.Id()
+	command.Params["id"] = job.Id()
 }
 
 func (tube *Tube) Reserve(command *Command, sendChannel chan Command) {
@@ -182,6 +190,10 @@ func (tube *Tube) ReserveWithTimeout(command *Command, sendChannel chan Command)
 }
 
 func (tube *Tube) Delete(command *Command) {
+	if db := tube.db; db != nil {
+		db.Delete(command.Job, tube)
+	}
+
 	if tube.buried.Delete(command.Params["id"]) != nil ||
 		tube.reserved.Delete(command.Params["id"]) != nil {
 		// log.Println("TUBE_HANDLER deleted job: ", c, name)
@@ -241,4 +253,8 @@ func (tube *Tube) KickJob(command *Command) {
 	} else {
 		command.Err = errors.New(NOT_FOUND)
 	}
+}
+
+func (tube *Tube) PersistTo(p Persister) {
+	tube.db = p
 }
