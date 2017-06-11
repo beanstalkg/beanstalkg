@@ -1,7 +1,7 @@
 package backend
 
 import (
-	"github.com/beanstalkg/beanstalkg/architecture"
+	"github.com/beanstalkg/beanstalkg/pkg/architecture"
 	//"os"
 	//"runtime/pprof"
 

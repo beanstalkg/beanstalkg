@@ -2,7 +2,7 @@ package operation
 
 import (
 	"bufio"
-	"github.com/beanstalkg/beanstalkg/architecture"
+	"github.com/beanstalkg/beanstalkg/pkg/architecture"
 	"net"
 	"reflect"
 )
