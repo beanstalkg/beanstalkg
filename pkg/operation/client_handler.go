@@ -3,11 +3,12 @@ package operation
 import (
 	"bufio"
 	"errors"
-	"github.com/op/go-logging"
-	"github.com/vimukthi-git/beanstalkg/pkg/architecture"
 	"net"
 	"reflect"
 	"strconv"
+
+	"github.com/op/go-logging"
+	"github.com/beanstalkg/beanstalkg/architecture"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
@@ -163,36 +164,38 @@ func (client *clientHandler) handleBasicCommand(command architecture.Command) ar
 		} else {
 			command.Err = errors.New(architecture.NOT_FOUND)
 		}
+	case architecture.KICK_JOB:
+		client.usedTubeConnection <- command.Copy()
+		command = <-client.usedTubeConnection
+	case architecture.KICK:
+		client.usedTubeConnection <- command.Copy()
+		command = <-client.usedTubeConnection
 	case architecture.TOUCH:
 
+	case architecture.QUIT:
+		client.conn.Close()
 	}
 
 	return command
 }
 
 func (client *clientHandler) reserve(command architecture.Command) architecture.Command {
-	recv := make(chan architecture.Command)
-	go func() {
-		// iterate and create a list of watched connections to receive from
-		receiveConnections := []chan architecture.Command{}
-		receiveConnectionNames := []string{}
-		for name, connection := range client.watchedTubeConnections {
-			connection <- command.Copy()
-			receiveConnections = append(receiveConnections, <-client.watchedTubeConnectionsReceiver)
-			receiveConnectionNames = append(receiveConnectionNames, name)
-		}
-		// receive from one of the channels
-		cases := make([]reflect.SelectCase, len(receiveConnections))
-		for i, ch := range receiveConnections {
-			cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
-		}
-		chosen, value, _ := reflect.Select(cases)
-		resultCommand := value.Interface().(architecture.Command)
-		resultCommand.Params["tube"] = receiveConnectionNames[chosen]
-		recv <- resultCommand.Copy()
-		return
-	}()
-	command = <-recv
-	client.reservedJobs[command.Job.Id()] = command.Params["tube"]
-	return command
+	// iterate and create a list of watched connections to receive from
+	receiveConnections := []chan architecture.Command{}
+	receiveConnectionNames := []string{}
+	for name, connection := range client.watchedTubeConnections {
+		connection <- command.Copy()
+		receiveConnections = append(receiveConnections, <-client.watchedTubeConnectionsReceiver)
+		receiveConnectionNames = append(receiveConnectionNames, name)
+	}
+	// receive from one of the channels
+	cases := make([]reflect.SelectCase, len(receiveConnections))
+	for i, ch := range receiveConnections {
+		cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
+	}
+	chosen, value, _ := reflect.Select(cases)
+	resultCommand := value.Interface().(architecture.Command)
+	resultCommand.Params["tube"] = receiveConnectionNames[chosen]
+	client.reservedJobs[resultCommand.Job.Id()] = resultCommand.Params["tube"]
+	return resultCommand
 }

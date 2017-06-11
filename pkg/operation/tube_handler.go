@@ -1,8 +1,8 @@
 package operation
 
 import (
-	"github.com/vimukthi-git/beanstalkg/pkg/architecture"
-	"github.com/vimukthi-git/beanstalkg/pkg/backend"
+	"github.com/beanstalkg/beanstalkg/architecture"
+	"github.com/beanstalkg/beanstalkg/backend"
 	"time"
 )
 
@@ -47,6 +47,12 @@ func NewTubeHandler(
 					commands <- incomingCommand.Copy()
 				case architecture.BURY:
 					tube.Bury(&incomingCommand)
+					commands <- incomingCommand.Copy()
+				case architecture.KICK:
+					tube.Kick(&incomingCommand)
+					commands <- incomingCommand.Copy()
+				case architecture.KICK_JOB:
+					tube.KickJob(&incomingCommand)
 					commands <- incomingCommand.Copy()
 				}
 			case <-stop:

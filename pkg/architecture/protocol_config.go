@@ -69,12 +69,30 @@ func init() {
 		},
 		BURY: {
 			Name:           BURY,
-			ExpectedLength: 2,
+			ExpectedLength: 3,
 			WaitingForMore: false,
 			Params:         []string{"id", "pri"},
 		},
 		TOUCH: {
 			Name:           TOUCH,
+			ExpectedLength: 2,
+			WaitingForMore: false,
+			Params:         []string{"id"},
+		},
+		QUIT: {
+			Name:           QUIT,
+			ExpectedLength: 1,
+			WaitingForMore: false,
+			Params:         []string{},
+		},
+		KICK: {
+			Name:           KICK,
+			ExpectedLength: 2,
+			WaitingForMore: false,
+			Params:         []string{"bound"},
+		},
+		KICK_JOB: {
+			Name:           KICK_JOB,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
@@ -127,6 +145,18 @@ func init() {
 		TOUCH: {
 			Result:   false,
 			Message:  "INSERTED",
+			Param:    "",
+			UseJobID: true,
+		},
+		KICK: {
+			Result:   false,
+			Message:  "KICKED",
+			Param:    "",
+			UseJobID: false,
+		},
+		KICK_JOB: {
+			Result:   false,
+			Message:  "KICKED",
 			Param:    "",
 			UseJobID: true,
 		},

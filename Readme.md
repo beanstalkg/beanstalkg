@@ -1,4 +1,4 @@
-## Beanstalkg [![CircleCI](https://circleci.com/gh/vimukthi-git/beanstalkg.svg?style=svg)](https://circleci.com/gh/vimukthi-git/beanstalkg)
+## Beanstalkg [![CircleCI](https://circleci.com/gh/vimukthi-git/beanstalkg.svg?style=svg)](https://circleci.com/gh/vimukthi-git/beanstalkg) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/beanstalkg-chat/Lobby)
 
 Beanstalkg is a go implementation of [Beanstalkd](https://github.com/kr/beanstalkd) **a fast, general-purpose work queue**. 
 Idea is to support the same set of features and protocol with the addition of
@@ -23,7 +23,7 @@ working docker engine installation, you can start a Beanstalkg instance with fol
 - Run command `docker run -p 11300:11300 beanstalkg/beanstalkg:v0.0.3`. This will start the beanstalkg server in the foreground.
  The server starts listening on port 11300.
 - Now you can connect to the server with any client library available to [beanstalkd](https://github.com/kr/beanstalkd/wiki/Client-Libraries). 
- eg: Using [official go client](https://github.com/kr/beanstalk)
+ eg: Using [official go client](https://github.com/Beanstalkg/beanstalk)
     ```
     // Produce jobs:
     c, err := beanstalk.Dial("tcp", "127.0.0.1:11300")
@@ -34,13 +34,14 @@ working docker engine installation, you can start a Beanstalkg instance with fol
     id, body, err := c.Reserve(5 * time.Second)
     
     ```
+Some introductory slides can be found [here](https://www.slideshare.net/VimukthiWickramasing/beanstalkg-76573237)
 
 ### Developer guide
 
-Please install golang and then clone this repo and from the root run,
+Please install golang then with `GOPATH` set correctly run,
 
-- `go install`
-- `go run main.go`
+- `go get github.com/Beanstalkg/beanstalkg`
+- Add `$GOAPTH/bin` to the $PATH and run `beanstalkg`
 
 ## Licensing
 

@@ -1,5 +1,6 @@
 var fivebeans = require('fivebeans');
 
+var args = process.argv.slice(2);
 var client = new fivebeans.client('localhost', 11300);
 client
     .on('connect', function()
@@ -7,17 +8,12 @@ client
         console.log("connected");
         client.use("test", function(err, tubename) {
             if (err == null) {
-                //setInterval(function() {
-                // priority, delay, ttr, payload
-                    client.put(1, 20, 5, JSON.stringify({"number": 1}), function(err, jobid) {
-                        console.log("put job id", jobid);
-                        process.exit();
-                    });
-                //}, 100);
+              client.kick(parseInt(args[0]), function(err, jobid) {
+                  console.log("kicking ", args[0], "jobs");
+                  process.exit();
+              });
             }
-
         });
-
     })
     .on('error', function(err)
     {
