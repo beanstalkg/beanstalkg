@@ -4,9 +4,18 @@
 	"GodepVersion": "v79",
 	"Deps": [
 		{
+			"ImportPath": "github.com/BurntSushi/toml",
+			"Comment": "v0.3.0",
+			"Rev": "b26d9c308763d68093482582cea63d69be07a0f0"
+		},
+		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
 			"Comment": "v1.1.0",
 			"Rev": "346938d642f2ec3594ed81d874461961cd0faa76"
+		},
+		{
+			"ImportPath": "github.com/jinzhu/configor",
+			"Rev": "ff2ac2b1ce3d687c3a1da0d2847fbce42524a7f3"
 		},
 		{
 			"ImportPath": "github.com/op/go-logging",
@@ -36,6 +45,10 @@
 			"ImportPath": "github.com/stretchr/testify/mock",
 			"Comment": "v1.1.4-27-g4d4bfba",
 			"Rev": "4d4bfba8f1d1027c4fdbe371823030df51419987"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v1",
+			"Rev": "137fcee5b78f4093230fd810c434c7d6fc065f76"
 		}
 	]
 }
