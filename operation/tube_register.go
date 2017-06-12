@@ -13,6 +13,7 @@ type TubeRegister struct {
 	useTubeConnectionReceiver      chan chan architecture.Command
 	watchedTubeConnectionsReceiver chan chan architecture.Command
 	stop                           chan bool
+	queueCreator                   architecture.PriorityQueueCreator
 }
 
 func (tr *TubeRegister) init() {
@@ -51,7 +52,7 @@ func (tr *TubeRegister) createTubeHandler(
 	chan architecture.Command, chan bool) {
 	tubeChannel := make(chan architecture.Command)
 	stop := make(chan bool)
-	NewTubeHandler(name, tubeChannel, watchedTubeConnectionsReceiver, stop)
+	NewTubeHandler(name, tubeChannel, watchedTubeConnectionsReceiver, stop, tr.queueCreator)
 	return tubeChannel, stop
 }
 
@@ -60,6 +61,7 @@ func NewTubeRegister(
 	useTubeConnectionReceiver chan chan architecture.Command,
 	watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
+	queueCreator architecture.PriorityQueueCreator,
 ) {
 	// store the tube stop signalling channels
 	tubeStopChannels := make(map[string]chan bool)
@@ -72,6 +74,7 @@ func NewTubeRegister(
 		useTubeConnectionReceiver,
 		watchedTubeConnectionsReceiver,
 		stop,
+		queueCreator,
 	}
 	go tubeRegister.init()
 }

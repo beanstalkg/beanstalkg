@@ -31,7 +31,7 @@ func main() {
 	// use this tube to send the channels for each individual tube to the clients when the do 'use' command
 	useTubeConnectionReceiver := make(chan chan architecture.Command)
 	watchedTubeConnectionsReceiver := make(chan chan architecture.Command)
-	operation.NewTubeRegister(tubeRegister, useTubeConnectionReceiver, watchedTubeConnectionsReceiver, stop)
+	operation.NewTubeRegister(tubeRegister, useTubeConnectionReceiver, watchedTubeConnectionsReceiver, stop, cfg.queueCreator)
 	log.Info("BEANSTALKG listening on: ", cfg.Port)
 
 	for {
