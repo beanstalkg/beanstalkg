@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"os"
 	"os/exec"
 	"time"
 )
@@ -15,7 +16,7 @@ var _ = Describe("Put", func() {
 
 	BeforeEach(func() {
 		var err error
-		command := exec.Command("../beanstalkg")
+		command := exec.Command(os.Getenv("GOPATH") + "/bin/beanstalkg")
 		bs_session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Ω(err).ShouldNot(HaveOccurred())
 		// wait for the server to become ready
