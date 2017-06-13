@@ -1,8 +1,8 @@
-package main
+package config
 
 import (
 	"flag"
-
+	
 	"github.com/jinzhu/configor"
 )
 
