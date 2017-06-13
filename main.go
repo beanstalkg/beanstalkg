@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/beanstalkg/beanstalkg/architecture"
+	"github.com/beanstalkg/beanstalkg/backend"
 	"github.com/beanstalkg/beanstalkg/operation"
 	"github.com/op/go-logging"
 )
@@ -31,7 +32,7 @@ func main() {
 	// use this tube to send the channels for each individual tube to the clients when the do 'use' command
 	useTubeConnectionReceiver := make(chan chan architecture.Command)
 	watchedTubeConnectionsReceiver := make(chan chan architecture.Command)
-	operation.NewTubeRegister(tubeRegister, useTubeConnectionReceiver, watchedTubeConnectionsReceiver, stop, cfg.queueCreator)
+	operation.NewTubeRegister(tubeRegister, useTubeConnectionReceiver, watchedTubeConnectionsReceiver, stop, backend.QueueCreator(cfg.Backend))
 	log.Info("BEANSTALKG listening on: ", cfg.Port)
 
 	for {
