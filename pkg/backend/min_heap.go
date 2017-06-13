@@ -12,11 +12,14 @@ var log = logging.MustGetLogger("BEANSTALKG")
 
 type MinHeap struct {
 	Store []architecture.PriorityQueueItem
+
+	tubeName string
 }
 
 // +++++++++++++ START - PriorityQueue Interface methods +++++++++++++++++
 
-func (h *MinHeap) Init() {
+func (h *MinHeap) Init(tubeName string) {
+	h.tubeName = tubeName
 	//for i := 0; i < 100000; i++ {
 	//	h.Store[i] = 1000000001
 	//}

@@ -1,9 +1,9 @@
 package operation
 
 import (
-	"github.com/beanstalkg/beanstalkg/pkg/architecture"
-	"github.com/beanstalkg/beanstalkg/pkg/backend"
 	"time"
+
+	"github.com/beanstalkg/beanstalkg/pkg/architecture"
 )
 
 func NewTubeHandler(
@@ -11,13 +11,11 @@ func NewTubeHandler(
 	commands chan architecture.Command,
 	watchedTubeConnectionsReceiver chan chan architecture.Command,
 	stop chan bool,
+	queueCreator architecture.PriorityQueueCreator,
 ) {
 	go func() {
 		// create the tube
-		tube := architecture.NewTube(name, func() architecture.PriorityQueue {
-			// plug backends here
-			return &backend.MinHeap{}
-		})
+		tube := architecture.NewTube(name, queueCreator)
 		ticker := time.NewTicker(architecture.QUEUE_FREQUENCY)
 		for {
 			select {

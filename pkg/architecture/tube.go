@@ -2,9 +2,10 @@ package architecture
 
 import (
 	"errors"
-	"github.com/op/go-logging"
-	"time"
 	"strconv"
+	"time"
+
+	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
@@ -14,7 +15,7 @@ const MAX_JOBS_PER_ITERATION int = 20                       // maximum number of
 
 // PriorityQueue is the interface that all backends should implement, See backend/min_heap.go for an example
 type PriorityQueue interface {
-	Init()
+	Init(tubeName string)
 	// queue item
 	Enqueue(item PriorityQueueItem)
 	// get the highest priority item without removing
@@ -62,11 +63,11 @@ func NewTube(name string, priorityQueueCreator PriorityQueueCreator) *Tube {
 		awaitingClients:      priorityQueueCreator(),
 		awaitingTimedClients: make(map[string]*AwaitingClient),
 	}
-	tube.ready.Init()
-	tube.delayed.Init()
-	tube.reserved.Init()
-	tube.buried.Init()
-	tube.awaitingClients.Init()
+	tube.ready.Init(name)
+	tube.delayed.Init(name)
+	tube.reserved.Init(name)
+	tube.buried.Init(name)
+	tube.awaitingClients.Init(name)
 	return tube
 }
 
