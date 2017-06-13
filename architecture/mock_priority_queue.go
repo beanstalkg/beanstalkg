@@ -62,7 +62,7 @@ func (_m *MockPriorityQueue) Find(id string) PriorityQueueItem {
 }
 
 // Init provides a mock function with given fields:
-func (_m *MockPriorityQueue) Init() {
+func (_m *MockPriorityQueue) Init(tubeName string) {
 	_m.Called()
 }
 
