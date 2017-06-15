@@ -8,13 +8,8 @@ import (
 	"github.com/beanstalkg/beanstalkg/pkg/architecture"
 	"github.com/beanstalkg/beanstalkg/pkg/operation"
 	"github.com/beanstalkg/beanstalkg/pkg/backend"
-	// planning to do this, but seems not working
-	//"github.com/beanstalkg/beanstalkg/config/"
+	"github.com/beanstalkg/beanstalkg/config"
 	"github.com/op/go-logging"
-
-	// temporarily here to merge "new folder struct"
-	"flag"
-	"github.com/jinzhu/configor"
 )
 
 // temporarily here to merge "new folder struct"
@@ -27,7 +22,7 @@ type ServerConfig struct {
 var log = logging.MustGetLogger("BEANSTALKG")
 
 func main() {
-	cfg := getConfig();
+	cfg := config.GetConfig();
 	initLogging(cfg.Debug)
 	go func() {
 		log.Info(http.ListenAndServe("localhost:6060", nil))
@@ -86,17 +81,4 @@ func initLogging(debugMode bool) {
 	}
 	// Set the backends to be used.
 	logging.SetBackend(backend1Leveled, backend2Leveled)
-}
-
-// temporarily put this here so we can start with the new folder structure
-func getConfig() *ServerConfig {
-	cfg := &ServerConfig{}
-	configor.New(&configor.Config{ENVPrefix: "BEANSTALKG"}).Load(cfg, "config.yml")
-
-	flag.StringVar(&cfg.Port, "port", cfg.Port, "Port for beanstalkg server")
-	flag.StringVar(&cfg.Backend, "backend", cfg.Backend, "Use this backend for job storage.")
-	flag.BoolVar(&cfg.Debug, "debug", cfg.Debug, "Start server in debug mode. Logs shall contain more information")
-	flag.Parse()
-
-	return cfg
 }

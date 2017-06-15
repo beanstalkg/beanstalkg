@@ -15,7 +15,7 @@ type ServerConfig struct {
 // getConfig sets values based on the following order of precedence:
 // flags, environment variables, configuration files, and finally
 // defaults.
-func getConfig() *ServerConfig {
+func GetConfig() *ServerConfig {
 	cfg := &ServerConfig{}
 	configor.New(&configor.Config{ENVPrefix: "BEANSTALKG"}).Load(cfg, "config.yml")
 
