@@ -2,7 +2,6 @@ package main
 
 import (
 	"net"
-	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"github.com/beanstalkg/beanstalkg/pkg/architecture"
@@ -24,10 +23,6 @@ var log = logging.MustGetLogger("BEANSTALKG")
 func main() {
 	cfg := config.GetConfig();
 	initLogging(cfg.Debug)
-	go func() {
-		log.Info(http.ListenAndServe("localhost:6060", nil))
-	}()
-
 	service := ":" + cfg.Port
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err)
