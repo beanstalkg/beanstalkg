@@ -6,6 +6,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"os/exec"
 	"time"
+	// "strconv"
 )
 
 var _ = Describe("Put", func() {
@@ -32,8 +33,32 @@ var _ = Describe("Put", func() {
 				var id string
 				_, err = conn.readResp(r, false, "INSERTED %s", &id)
 				Ω(err).ShouldNot(HaveOccurred())
-				println("id is " + id)
+				// println("successfully put job with id " + id)
 				Ω(id).Should(MatchRegexp("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"))
+			})
+		})
+	})
+
+	Describe("Produce and Consume job", func() {
+		Context("Used with default tube", func() {
+			It("should correctly put job and then reserve it", func() {
+				put_payload := "hello"
+				// produce job
+				r1, err := conn.cmd([]byte(put_payload), "put", 0, dur(1), dur(1))
+				Ω(err).ShouldNot(HaveOccurred())
+				var put_id string
+				_, err = conn.readResp(r1, false, "INSERTED %s", &put_id)
+				Ω(err).ShouldNot(HaveOccurred())
+				// consume job
+				r2, err := conn.cmd(nil, "reserve")
+				Ω(err).ShouldNot(HaveOccurred())
+				// var info int
+				var reserved_id string
+				var reserved_payload []byte
+				reserved_payload, err = conn.readResp(r2, true, "RESERVED %s", &reserved_id)
+				Ω(err).ShouldNot(HaveOccurred())
+				Ω(reserved_id).Should(BeIdenticalTo(put_id))
+				Ω(string(reserved_payload)).Should(BeIdenticalTo(put_payload))
 			})
 		})
 	})
