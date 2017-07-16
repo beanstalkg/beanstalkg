@@ -3,8 +3,6 @@ package architecture
 import (
 	"strconv"
 	"time"
-
-	"github.com/satori/go.uuid"
 )
 
 type State int
@@ -147,7 +145,7 @@ type AwaitingClient struct {
 
 func NewAwaitingClient(request Command, sendChannel chan Command) *AwaitingClient {
 	a := new(AwaitingClient)
-	a.id = uuid.NewV1().String()
+	a.id = request.ClientId
 	a.Request = request
 	a.SendChannel = sendChannel
 	a.QueuedAt = time.Now().UnixNano()

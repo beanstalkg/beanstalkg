@@ -30,6 +30,6 @@ var transitionErrors = map[State]error{
 }
 
 var updateFuncs = map[State]updateFunc{
-	DELAYED:  updateTTR,
-	RESERVED: updateDelayed,
+	DELAYED:  updateDelayed,
+	RESERVED: updateTTR,
 }

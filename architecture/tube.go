@@ -125,8 +125,8 @@ func (tube *Tube) ProcessReadyQueue(limit int) {
 	for tube.awaitingClients.Peek() != nil && tube.ready.Peek() != nil {
 		availableClientConnection := tube.awaitingClients.Dequeue()
 		client := availableClientConnection.(*AwaitingClient)
-		// log.Println("QUEUE sending job to client: ", client.id)
 		readyJob := tube.ready.Dequeue().(*Job)
+		log.Debug("QUEUE sending " + readyJob.id + " to client: ", client.id)
 		client.Request.Job = *readyJob
 		client.SendChannel <- client.Request.Copy()
 		readyJob.SetState(RESERVED)
@@ -183,6 +183,7 @@ func (tube *Tube) ReserveWithTimeout(command *Command, sendChannel chan Command)
 }
 
 func (tube *Tube) Delete(command *Command) {
+	log.Debug("QUEUE delete called on " + command.Params["id"] + " by client: ", command.ClientId)
 	if tube.buried.Delete(command.Params["id"]) != nil ||
 		tube.reserved.Delete(command.Params["id"]) != nil {
 		// log.Println("TUBE_HANDLER deleted job: ", c, name)
