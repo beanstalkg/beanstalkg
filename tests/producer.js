@@ -2,29 +2,26 @@ var fivebeans = require('fivebeans');
 
 var client = new fivebeans.client('localhost', 11300);
 client
-    .on('connect', function()
-    {
+    .on('connect', function () {
         console.log("connected");
-        client.use("test", function(err, tubename) {
+        client.use("test", function (err, tubename) {
             if (err == null) {
                 //setInterval(function() {
                 // priority, delay, ttr, payload
-                    client.put(1, 1, 5, JSON.stringify({"number": 1}), function(err, jobid) {
-                        console.log("put job id", jobid);
-                        process.exit();
-                    });
+                client.put(1, 1, 5, JSON.stringify({"number": 1}), function (err, jobid) {
+                    console.log("put job id", jobid);
+                    process.exit();
+                });
                 //}, 100);
             }
 
         });
 
     })
-    .on('error', function(err)
-    {
+    .on('error', function (err) {
         // connection failure
     })
-    .on('close', function()
-    {
+    .on('close', function () {
         // underlying connection has closed
     })
     .connect();
