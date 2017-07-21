@@ -31,6 +31,7 @@ client.connect();
              var res = yield client.reserveAsync();
              console.log(res[1].toString());
              var ob = JSON.parse(res[1].toString());
+             ob.number = ob.number + 1;
              yield client.destroyAsync(res[0]);
              client.putAsync(1, ob.number, 5, JSON.stringify(ob));
              setTimeout(function() {doit(client)}, 1);
