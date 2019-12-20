@@ -4,6 +4,7 @@ type CommandParseOptions struct {
 	ExpectedLength int
 	WaitingForMore bool
 	Params         []string
+	ParamInteger   []bool
 	Name           CommandName
 }
 
@@ -24,78 +25,91 @@ func init() {
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"tube"},
+			ParamInteger:   []bool{ false },
 		},
 		PUT: {
 			Name:           PUT,
 			ExpectedLength: 5,
 			WaitingForMore: true,
 			Params:         []string{"pri", "delay", "ttr", "bytes"},
+			ParamInteger:   []bool{ true, true, true, true },
 		},
 		WATCH: {
 			Name:           WATCH,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"tube"},
+			ParamInteger:   []bool{ false },
 		},
 		IGNORE: {
 			Name:           IGNORE,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"tube"},
+			ParamInteger:   []bool{ false },
 		},
 		RESERVE: {
 			Name:           RESERVE,
 			ExpectedLength: 1,
 			WaitingForMore: false,
 			Params:         []string{},
+			ParamInteger:   []bool{},
 		},
 		RESERVE_WITH_TIMEOUT: {
 			Name:           RESERVE_WITH_TIMEOUT,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"timeout"},
+			ParamInteger:   []bool{ true },
 		},
 		DELETE: {
 			Name:           DELETE,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
+			ParamInteger:   []bool{ false },
 		},
 		RELEASE: {
 			Name:           RELEASE,
 			ExpectedLength: 4,
 			WaitingForMore: false,
 			Params:         []string{"id", "pri", "delay"},
+			ParamInteger:   []bool{ false, true, true},
 		},
 		BURY: {
 			Name:           BURY,
 			ExpectedLength: 3,
 			WaitingForMore: false,
 			Params:         []string{"id", "pri"},
+			ParamInteger:   []bool{ false, true },
 		},
 		TOUCH: {
 			Name:           TOUCH,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
+			ParamInteger:   []bool{ false },
 		},
 		QUIT: {
 			Name:           QUIT,
 			ExpectedLength: 1,
 			WaitingForMore: false,
 			Params:         []string{},
+			ParamInteger:   []bool{},
 		},
 		KICK: {
 			Name:           KICK,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"bound"},
+			ParamInteger:   []bool{ true },
 		},
 		KICK_JOB: {
 			Name:           KICK_JOB,
 			ExpectedLength: 2,
 			WaitingForMore: false,
 			Params:         []string{"id"},
+			ParamInteger:   []bool{ false },
 		},
 	}
 
