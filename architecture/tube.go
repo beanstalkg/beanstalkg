@@ -11,7 +11,7 @@ import (
 var log = logging.MustGetLogger("BEANSTALKG")
 
 const QUEUE_FREQUENCY time.Duration = 20 * time.Millisecond // process every 20ms. TODO check why some clients get stuck when this is lower
-const MAX_JOBS_PER_ITERATION int = 20                       // maximum number of jobs processed per queue per one cycle
+const MAX_JOBS_PER_ITERATION int = 2                       // maximum number of jobs processed per queue per one cycle
 
 // PriorityQueue is the interface that all backends should implement, See backend/min_heap.go for an example
 type PriorityQueue interface {
@@ -125,8 +125,8 @@ func (tube *Tube) ProcessReadyQueue(limit int) {
 	for tube.awaitingClients.Peek() != nil && tube.ready.Peek() != nil {
 		availableClientConnection := tube.awaitingClients.Dequeue()
 		client := availableClientConnection.(*AwaitingClient)
-		// log.Println("QUEUE sending job to client: ", client.id)
 		readyJob := tube.ready.Dequeue().(*Job)
+		log.Debug("QUEUE sending " + readyJob.id + " to client: ", client.id)
 		client.Request.Job = *readyJob
 		client.SendChannel <- client.Request.Copy()
 		readyJob.SetState(RESERVED)
@@ -183,9 +183,10 @@ func (tube *Tube) ReserveWithTimeout(command *Command, sendChannel chan Command)
 }
 
 func (tube *Tube) Delete(command *Command) {
+	job := tube.reserved.Find(command.Params["id"])
 	if tube.buried.Delete(command.Params["id"]) != nil ||
 		tube.reserved.Delete(command.Params["id"]) != nil {
-		// log.Println("TUBE_HANDLER deleted job: ", c, name)
+		log.Debug("TUBE_HANDLER deleted job: ", job.(*Job).Data)
 		command.Err = nil
 	} else {
 		command.Err = errors.New(NOT_FOUND)

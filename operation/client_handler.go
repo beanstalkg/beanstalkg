@@ -9,11 +9,13 @@ import (
 
 	"github.com/op/go-logging"
 	"github.com/beanstalkg/beanstalkg/architecture"
+	"github.com/satori/go.uuid"
 )
 
 var log = logging.MustGetLogger("BEANSTALKG")
 
 type clientHandler struct {
+	id			       string
 	conn                           net.Conn
 	registerConnection             chan architecture.Command
 	tubeConnectionReceiver         chan chan architecture.Command
@@ -34,6 +36,7 @@ func NewClientHandler(
 	go func() {
 		defer conn.Close()
 		client := clientHandler{
+			"client_" + uuid.NewV1().String(),
 			conn,
 			registerConnection,
 			useTubeConnectionReceiver,
@@ -43,8 +46,9 @@ func NewClientHandler(
 			map[string]string{},
 			stop,
 		}
+		log.Info(client.id + " start")
 		client.startSession()
-		log.Info("CLIENT_HANDLER exit")
+		log.Info(client.id + " exit")
 		return
 	}()
 }
@@ -66,7 +70,7 @@ func (client *clientHandler) handleReply(c architecture.Command) error {
 
 func (client *clientHandler) startSession() {
 	// this command object will be replaced each time the client sends a new one
-	c := architecture.NewDefaultCommand()
+	c := architecture.NewDefaultCommand(client.id)
 	// selects default tube first up
 	client.registerConnection <- c.Copy()
 	client.usedTubeConnection = <-client.tubeConnectionReceiver
@@ -81,6 +85,7 @@ func (client *clientHandler) startSession() {
 		for scanner.Scan() {
 			scan <- scanner.Text()
 		}
+		log.Debug(client.id + " scanner exit")
 		exit <- true
 	}()
 
@@ -90,18 +95,20 @@ func (client *clientHandler) startSession() {
 			parsed, err := c.Parse(rawCommand)
 			if err != nil { // check if parse error
 				err = client.handleReply(c)
-				c = architecture.NewCommand()
+				c = architecture.NewCommand(client.id)
 				if err != nil {
+					log.Error(client.id + " encountered error", err)
 					return
 				}
 			} else if parsed { // check if the command has been parsed completely
 				c = client.handleBasicCommand(c)
 				err = client.handleReply(c)
 				if err != nil {
+					log.Error(client.id + " encountered error", err)
 					return
 				}
 				// we replace previous command once its parsing is finished
-				c = architecture.NewCommand()
+				c = architecture.NewCommand(client.id)
 			}
 		case <-client.stop:
 			return
@@ -195,6 +202,7 @@ func (client *clientHandler) reserve(command architecture.Command) architecture.
 	}
 	chosen, value, _ := reflect.Select(cases)
 	resultCommand := value.Interface().(architecture.Command)
+	log.Debug(client.id + " : " + resultCommand.Job.Data)
 	resultCommand.Params["tube"] = receiveConnectionNames[chosen]
 	client.reservedJobs[resultCommand.Job.Id()] = resultCommand.Params["tube"]
 	return resultCommand

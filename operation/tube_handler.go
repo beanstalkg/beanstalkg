@@ -33,7 +33,7 @@ func NewTubeHandler(
 					watchedTubeConnectionsReceiver <- sendChan
 					tube.Reserve(&incomingCommand, sendChan)
 				case architecture.RESERVE_WITH_TIMEOUT:
-					log.Info("reserve-with-timeout", incomingCommand)
+					log.Debug("reserve-with-timeout", incomingCommand)
 					sendChan := make(chan architecture.Command)
 					watchedTubeConnectionsReceiver <- sendChan
 					tube.ReserveWithTimeout(&incomingCommand, sendChan)

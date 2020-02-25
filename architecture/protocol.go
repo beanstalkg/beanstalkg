@@ -44,6 +44,7 @@ const MAX_JOB_SIZE int64 = 65536 // 2^16
 
 type Command struct {
 	Name           CommandName
+	ClientId       string
 	RawCommand     string
 	Params         map[string]string
 	WaitingForMore bool
@@ -52,16 +53,18 @@ type Command struct {
 	Job            Job
 }
 
-func NewCommand() Command {
+func NewCommand(clientId string) Command {
 	return Command{
+		ClientId: clientId,
 		MoreToSend: false,
 		Params:     map[string]string{},
 	}
 }
 
-func NewDefaultCommand() Command {
+func NewDefaultCommand(clientId string) Command {
 	return Command{
 		Name:       USE,
+		ClientId: clientId,
 		RawCommand: "use default",
 		Params: map[string]string{
 			"tube": "default",
@@ -77,6 +80,7 @@ func (command *Command) Copy() Command {
 	}
 	return Command{
 		Name:           command.Name,
+		ClientId: command.ClientId,
 		RawCommand:     command.RawCommand,
 		Params:         paramsCopy,
 		WaitingForMore: command.WaitingForMore,
