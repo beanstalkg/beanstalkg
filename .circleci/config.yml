@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: beanstalkg/beanstalkg_build:v0.03
 
-    working_directory: /go/src/github.com/vimukthi-git/beanstalkg
+    working_directory: /go/src/github.com/beanstalkg/beanstalkg
 
     environment:
       TEST_RESULTS: /tmp/test-results
@@ -21,7 +21,7 @@ jobs:
             #CONTACTS_DB_MIGRATIONS: /go/src/github.com/circleci/cci-demo-go/db/migrations
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
-            go get github.com/vimukthi-git/beanstalkg
+            go get github.com/beanstalkg/beanstalkg
             go test -v ./... | tee ${TEST_RESULTS}/go-test.out
 
       - deploy:
@@ -49,7 +49,7 @@ jobs:
   deploy_docker:
     docker:
       - image: beanstalkg/beanstalkg_build:v0.03
-    working_directory: /go/src/github.com/vimukthi-git/beanstalkg
+    working_directory: /go/src/github.com/beanstalkg/beanstalkg
     steps:
       - setup_remote_docker
       - checkout
@@ -65,10 +65,8 @@ jobs:
       - run:
           name: Docker build
           command: |
-            go get github.com/vimukthi-git/beanstalkg
+            go get github.com/beanstalkg/beanstalkg
             CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o beanstalkg .
             docker build -t "beanstalkg:${CIRCLE_BRANCH}" .
             docker tag beanstalkg:$CIRCLE_BRANCH beanstalkg/beanstalkg:$CIRCLE_BRANCH
             docker push beanstalkg/beanstalkg:$CIRCLE_BRANCH
-
-

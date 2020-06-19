@@ -3,7 +3,7 @@ package operation
 import (
 	"time"
 
-	"github.com/beanstalkg/beanstalkg/architecture"
+	"github.com/beanstalkg/beanstalkg/pkg/architecture"
 )
 
 func NewTubeHandler(

@@ -4,17 +4,24 @@ import (
 	"net"
 	_ "net/http/pprof"
 	"os"
-
-	"github.com/beanstalkg/beanstalkg/architecture"
-	"github.com/beanstalkg/beanstalkg/backend"
-	"github.com/beanstalkg/beanstalkg/operation"
+	"github.com/beanstalkg/beanstalkg/pkg/architecture"
+	"github.com/beanstalkg/beanstalkg/pkg/operation"
+	"github.com/beanstalkg/beanstalkg/pkg/backend"
+	"github.com/beanstalkg/beanstalkg/config"
 	"github.com/op/go-logging"
 )
+
+// temporarily here to merge "new folder struct"
+type ServerConfig struct {
+	Port    string `default:"11300"`
+	Debug   bool
+	Backend string `default:"minheap"`
+}
 
 var log = logging.MustGetLogger("BEANSTALKG")
 
 func main() {
-	cfg := getConfig()
+	cfg := config.GetConfig();
 	initLogging(cfg.Debug)
 	service := ":" + cfg.Port
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)

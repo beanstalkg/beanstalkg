@@ -1,7 +1,7 @@
 package operation
 
 import (
-	"github.com/beanstalkg/beanstalkg/architecture"
+	"github.com/beanstalkg/beanstalkg/pkg/architecture"
 )
 
 const DEFAULT_TUBE string = "default"
