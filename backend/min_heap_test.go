@@ -1,119 +1,77 @@
 package backend
 
 import (
-	"fmt"
+	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/vimukthi-git/beanstalkg/architecture"
 )
 
-type testHeapItem struct {
-	key       int64
-	id        string
-	timestamp int64
+const numberOfInserts = 3
+
+var tt = []architecture.PriorityQueueItem{
+	ownHeapItem{4, "1", time.Now().UnixNano()},
+	ownHeapItem{9, "2", time.Now().UnixNano()},
+	ownHeapItem{3, "3", time.Now().UnixNano()},
+
+	ownHeapItem{1, "one", time.Now().UnixNano()},
+	ownHeapItem{1, "two", time.Now().UnixNano()},
+	ownHeapItem{1, "three", time.Now().UnixNano()},
+	ownHeapItem{1, "four", time.Now().UnixNano()},
 }
 
-func (t testHeapItem) Key() int64 {
-	return t.key
-}
-
-func (t testHeapItem) Id() string {
-	return t.id
-}
-
-func (t testHeapItem) Timestamp() int64 {
-	return t.timestamp
-}
-
-func (t testHeapItem) Enqueued() {
-	t.timestamp = time.Now().UnixNano()
-}
-
-func (t testHeapItem) Dequeued() {
-}
-
-/**
-5
-INSERT 4
-INSERT 9
-DELETE 4
-*/
 func TestMinHeap_Insert(t *testing.T) {
 	m := MinHeap{}
-	m.Enqueue(testHeapItem{4, string(1), time.Now().UnixNano()})
-	fmt.Println(m.Min().Key())
-	if m.Min().Key() != 4 {
-		t.Fail()
+
+	var expectedMins = []int64{4, 4, 3}
+	var tests = tt[:numberOfInserts]
+
+	// Test inserting items into heap.
+	for i, testItem := range tests {
+		m.Enqueue(testItem)
+
+		if key := m.Min().Key(); key != expectedMins[i] {
+			t.Errorf("Expected %d, got %d.", expectedMins[i], key)
+		}
 	}
-	m.Enqueue(testHeapItem{9, string(2), time.Now().UnixNano()})
-	fmt.Println(m.Min())
-	if m.Min().Key() != 4 {
-		t.Fail()
-	}
-	m.Delete(string(1))
-	if m.Size() != 1 {
-		t.Fail()
-	}
-	fmt.Println(m.Min().Key())
-	if m.Min().Key() != 9 {
-		t.Fail()
-	}
-	// m.Delete(string(2))
-	fmt.Println(m.Dequeue().Key(), string(3))
 }
 
-func TestMinHeap_InsertCheckDelete(t *testing.T) {
+func TestMinHeap_Dequeue(t *testing.T) {
 	m := MinHeap{}
-	m.Enqueue(testHeapItem{1, "one", time.Now().UnixNano()})
-	m.Enqueue(testHeapItem{1, "two", time.Now().UnixNano()})
-	m.Enqueue(testHeapItem{1, "three", time.Now().UnixNano()})
-	m.Enqueue(testHeapItem{1, "four", time.Now().UnixNano()})
-	fmt.Println(m)
-	item := m.Dequeue().(testHeapItem)
-	if item.Id() != "one" {
-		t.Fail()
+
+	// MinHeap is FIFO when ids match.
+	var tt_expectedIds = []string{"one", "two", "three", "four"}
+
+	for _, testItem := range tt[numberOfInserts:] {
+		m.Enqueue(testItem)
 	}
-	fmt.Println(item, m)
-	item = m.Dequeue().(testHeapItem)
-	if item.Id() != "two" {
-		t.Fail()
+
+	for _, expectedId := range tt_expectedIds {
+		item := m.Dequeue()
+
+		if id := item.Id(); id != expectedId {
+			t.Errorf("Expected %s, got %s.", expectedId, id)
+		}
 	}
-	fmt.Println(item, m)
-	item = m.Dequeue().(testHeapItem)
-	if item.Id() != "three" {
-		t.Fail()
+
+	if item := m.Dequeue(); item != nil {
+		t.Errorf("Expected nil, got %#v", item)
 	}
-	fmt.Println(item, m)
-	item = m.Dequeue().(testHeapItem)
-	if item.Id() != "four" {
-		t.Fail()
-	}
-	fmt.Println(item, m)
-	if m.Dequeue() != nil {
-		t.Fail()
-	}
-	m.Enqueue(testHeapItem{1, "one", time.Now().UnixNano()})
-	item = m.Dequeue().(testHeapItem)
-	if item.Id() != "one" {
-		t.Fail()
-	}
-	//item = m.Dequeue().(testHeapItem)
-	//fmt.Println(item, m)
 }
 
-func TestIntegration(t *testing.T) {
-	// TODO create another tube struct to make this work
-	//tube := architecture.Tube{"test", &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, &MinHeap{}, make(map[string]*architecture.AwaitingClient)}
-	////m.Enqueue(testHeapItem{4, string(1)})
-	//fmt.Println(tube)
-	//tube.delayed.Enqueue(testHeapItem{4, string(1), time.Now().UnixNano()})
-	//if tube.delayed.Dequeue().Key() != 4 {
-	//	t.Fail()
-	//}
-	//fmt.Println(tube.delayed)
-	//if tube.delayed.Find(string(1)) != nil {
-	//	t.Fail()
-	//}
-	//if tube.delayed.Dequeue() != nil {
-	//	t.Fail()
-	//}
+func TestMinHeap_Delete(t *testing.T) {
+	m := MinHeap{}
+
+	var tests = tt[:numberOfInserts]
+	var testToDelete = tests[rand.Intn(len(tests))]
+
+	for _, testItem := range tests {
+		m.Enqueue(testItem)
+	}
+
+	m.Delete(testToDelete.Id())
+	if item := m.Find(testToDelete.Id()); item != nil {
+		t.Errorf("Deleted %s earlier, but still exists in heap; %s.", testToDelete.Id(), item.Id())
+	}
 }
